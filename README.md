@@ -1,4 +1,4 @@
-# HonorEtude
+# HonorProject
  
 Katana Project를 통해 언리얼의 사용법 및 활용방법을 익혔다면
 
