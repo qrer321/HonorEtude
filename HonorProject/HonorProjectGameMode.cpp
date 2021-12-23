@@ -6,7 +6,7 @@
 AHonorProjectGameMode::AHonorProjectGameMode()
 {
 	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("Blueprint'/Game/BaseContent/ThirdPersonCPP/Blueprints/ThirdPersonCharacter.ThirdPersonCharacter_C'"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("Blueprint'/Game/HonorProejct/Character/BPThirdPersonCharacter.BPThirdPersonCharacter_C'"));
 	if (PlayerPawnBPClass.Succeeded())
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 }
