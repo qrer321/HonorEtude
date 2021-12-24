@@ -6,6 +6,8 @@
 #include "EngineGlobals.h"
 #include "EngineMinimal.h"
 #include "DrawDebugHelpers.h"
+#include "Net/UnrealNetwork.h"
+#include "Kismet/KismetMathLibrary.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(HonorProject, Log, All);
 #define LOG_CALLINFO (FString(__FUNCTION__) + TEXT("{") + FString::FromInt(__LINE__) + TEXT("}"))

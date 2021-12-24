@@ -22,7 +22,13 @@ public:
 	bool m_IsinAir;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	float m_Speed;
+	float m_SpeedForward;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float m_SpeedRight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	bool m_IsCombatMode;
 	
 public:
 	virtual void NativeInitializeAnimation() override;

@@ -19,27 +19,35 @@ void UCharacterAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
 
-	const APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (IsValid(PlayerController))
-	{
-		AHonorProjectCharacter* PlayerCharacter = Cast<AHonorProjectCharacter>(PlayerController->GetPawn());
-		if (IsValid(PlayerCharacter))
-			m_PlayerCharacter = PlayerCharacter;
-	}
+	AHonorProjectCharacter* PlayerCharacter = Cast<AHonorProjectCharacter>(TryGetPawnOwner());
+	if (IsValid(PlayerCharacter))
+		m_PlayerCharacter = PlayerCharacter;
 }
 
 void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
-	const AHonorProjectCharacter* HonorCharacter = Cast<AHonorProjectCharacter>(TryGetPawnOwner());
-	if (IsValid(HonorCharacter))
+	if (IsValid(m_PlayerCharacter))
 	{
-		UCharacterMovementComponent* Movement = HonorCharacter->GetCharacterMovement();
+		UCharacterMovementComponent* Movement = m_PlayerCharacter->GetCharacterMovement();
 		if (Movement)
 		{
 			m_IsinAir = Movement->IsFalling();
-			m_Speed = HonorCharacter->GetVelocity().Size();
+
+			// 플레이어의 Velocity와 Forward, Right 벡터를 내적하여
+			// Forward와 Right의 Speed를 계산한다.
+			const FVector CharacterVelocity = m_PlayerCharacter->GetVelocity();
+			const FVector CharacterForward = m_PlayerCharacter->GetActorForwardVector();
+			const FVector CharacterRight = m_PlayerCharacter->GetActorRightVector();
+
+			const float DotForward = UKismetMathLibrary::Dot_VectorVector(CharacterVelocity, CharacterForward);
+			const float DotRight = UKismetMathLibrary::Dot_VectorVector(CharacterVelocity, CharacterRight);
+			
+			m_SpeedForward = DotForward;
+			m_SpeedRight = DotRight;
 		}
+
+		m_IsCombatMode = m_PlayerCharacter->IsCombatMode();
 	}
 }

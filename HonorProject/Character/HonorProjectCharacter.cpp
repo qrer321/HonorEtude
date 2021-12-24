@@ -14,6 +14,8 @@
 
 AHonorProjectCharacter::AHonorProjectCharacter()
 {
+	bReplicates = true;
+	
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -29,6 +31,7 @@ AHonorProjectCharacter::AHonorProjectCharacter()
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
+	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
 
@@ -50,6 +53,8 @@ void AHonorProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Pl
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("LockOn", IE_Pressed, this, &AHonorProjectCharacter::PressedLockOn);
+	PlayerInputComponent->BindAction("LockOn", IE_Released, this, &AHonorProjectCharacter::ReleasedLockOn);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AHonorProjectCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AHonorProjectCharacter::MoveRight);
@@ -58,6 +63,47 @@ void AHonorProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Pl
 	PlayerInputComponent->BindAxis("TurnRate", this, &AHonorProjectCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AHonorProjectCharacter::LookUpAtRate);
+}
+
+void AHonorProjectCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//DOREPLIFETIME_CONDITION(AHonorProjectCharacter, m_IsCombatMode, COND_SkipOwner);
+	DOREPLIFETIME(AHonorProjectCharacter, m_IsCombatMode);
+}
+
+void AHonorProjectCharacter::Server_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation, bool UseControllerDesiredRotation, float MaxWalkSpeed)
+{
+	// 서버에서만 동작하는 함수
+	// 멀티캐스트를 사용하면 이러한 문제를 고칠 수 있는 듯 하다.
+	m_IsCombatMode = IsCombatMode;
+	GetCharacterMovement()->bOrientRotationToMovement = UseOrientRotation;
+	GetCharacterMovement()->bUseControllerDesiredRotation = UseControllerDesiredRotation;
+
+	GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
+}
+
+void AHonorProjectCharacter::PressedLockOn()
+{
+	Server_IsCombatMode(true, false, true, 250.f);
+
+	// 클라이언트에서도 동일하게 동작해야 하기에 다시 넣는다.
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
+	GetCharacterMovement()->MaxWalkSpeed = 250.f;
+}
+
+void AHonorProjectCharacter::ReleasedLockOn()
+{
+	Server_IsCombatMode(false, true, false, 600.f);
+
+	// 클라이언트에서도 동일하게 동작해야 하기에 다시 넣는다.
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+
+	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 }
 
 void AHonorProjectCharacter::TurnAtRate(float Rate)
