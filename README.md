@@ -1,4 +1,5 @@
 # HonorProject
+https://outrageous-trunk-104.notion.site/KATANA-HONOR-ETUDE-aacb81cdee91471d8acd02a540f9dbbd
  
 Katana Project를 통해 언리얼의 사용법 및 활용방법을 익혔다면
 
