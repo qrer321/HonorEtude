@@ -29,7 +29,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
 	if (IsValid(m_PlayerCharacter))
-	{
+	{	
 		UCharacterMovementComponent* Movement = m_PlayerCharacter->GetCharacterMovement();
 		if (Movement)
 		{
@@ -49,5 +49,23 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		}
 
 		m_IsCombatMode = m_PlayerCharacter->IsCombatMode();
+	}
+}
+
+void UCharacterAnimInstance::AnimNotify_Weapon_Equip()
+{
+	if (IsValid(m_PlayerCharacter))
+	{
+		const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
+		m_PlayerCharacter->GetWeaponMeshComponent()->AttachToComponent(m_PlayerCharacter->GetMesh(), rules, TEXT("S_Equip"));
+	}
+}
+
+void UCharacterAnimInstance::AnimNotify_Weapon_Unequip()
+{
+	if (IsValid(m_PlayerCharacter))
+	{
+		const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
+		m_PlayerCharacter->GetWeaponMeshComponent()->AttachToComponent(m_PlayerCharacter->GetMesh(), rules, TEXT("S_Unequip"));
 	}
 }

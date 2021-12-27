@@ -34,4 +34,11 @@ public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
+public:
+	UFUNCTION()
+	void AnimNotify_Weapon_Equip();
+
+	UFUNCTION()
+	void AnimNotify_Weapon_Unequip();
 };

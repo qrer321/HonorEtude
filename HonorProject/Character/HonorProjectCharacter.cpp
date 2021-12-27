@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "HonorProjectCharacter.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
+
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -45,6 +45,28 @@ AHonorProjectCharacter::AHonorProjectCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
+	m_SMSword = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SM_Sword"));
+	
+	const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
+	m_SMSword->AttachToComponent(GetMesh(), rules, TEXT("S_Unequip"));
+	m_SMSword->SetIsReplicated(true);
+	
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SwordAsset(TEXT("StaticMesh'/Game/GKnight/Meshes/Weapon/SM_WP_GothicKnight_Sword.SM_WP_GothicKnight_Sword'"));
+	if (SwordAsset.Succeeded())
+		m_SMSword->SetStaticMesh(SwordAsset.Object);
+
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> EquipAnimAsset(TEXT("AnimMontage'/Game/HonorProejct/Character/AnimMontage/GreatSword_Equip_Montage.GreatSword_Equip_Montage'"));
+	if (EquipAnimAsset.Succeeded())
+		m_EquipAnimMontage = EquipAnimAsset.Object;
+}
+
+void AHonorProjectCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	m_AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 }
 
 void AHonorProjectCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -73,10 +95,23 @@ void AHonorProjectCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	DOREPLIFETIME(AHonorProjectCharacter, m_IsCombatMode);
 }
 
-void AHonorProjectCharacter::Server_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation, bool UseControllerDesiredRotation, float MaxWalkSpeed)
+void AHonorProjectCharacter::Server_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation,
+                                                                bool UseControllerDesiredRotation, float MaxWalkSpeed,
+                                                                FName SectionName)
 {
-	// 서버에서만 동작하는 함수
-	// 멀티캐스트를 사용하면 이러한 문제를 고칠 수 있는 듯 하다.
+	// RunonServer로 설정된 Server_IsCombatMode( ) 함수를 호출하면
+	// NetMulticast로 설정된 Client_IsCombatMode( ) 함수를 호출하게 된다.
+	
+	// 전체적인 흐름으로는 클라이언트 A가 Server 함수를 호출하면
+	// 해당 Server 함수가 서버에서 Client 함수를 호출하게 되고
+	// 서버와 클라이언트 B를 포함한 다른 모든 클라이언트에서 B 함수가 호출된다.
+	Client_IsCombatMode(IsCombatMode, UseOrientRotation, UseControllerDesiredRotation, MaxWalkSpeed, SectionName);
+	Server_PlayMontage(m_EquipAnimMontage, 1.f, SectionName);
+}
+
+void AHonorProjectCharacter::Client_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation,
+	bool UseControllerDesiredRotation, float MaxWalkSpeed, FName SectionName)
+{
 	m_IsCombatMode = IsCombatMode;
 	GetCharacterMovement()->bOrientRotationToMovement = UseOrientRotation;
 	GetCharacterMovement()->bUseControllerDesiredRotation = UseControllerDesiredRotation;
@@ -84,26 +119,24 @@ void AHonorProjectCharacter::Server_IsCombatMode_Implementation(bool IsCombatMod
 	GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
 }
 
+void AHonorProjectCharacter::Server_PlayMontage_Implementation(UAnimMontage* AnimMontage, float InPlayRate, FName StartSocketName)
+{
+	Client_PlayMontage(AnimMontage, InPlayRate, StartSocketName);
+}
+
+void AHonorProjectCharacter::Client_PlayMontage_Implementation(UAnimMontage* AnimMontage, float InPlayRate, FName StartSocketName)
+{
+	PlayAnimMontage(AnimMontage, InPlayRate, StartSocketName);
+}
+
 void AHonorProjectCharacter::PressedLockOn()
 {
-	Server_IsCombatMode(true, false, true, 250.f);
-
-	// 클라이언트에서도 동일하게 동작해야 하기에 다시 넣는다.
-	GetCharacterMovement()->bOrientRotationToMovement = false;
-	GetCharacterMovement()->bUseControllerDesiredRotation = true;
-
-	GetCharacterMovement()->MaxWalkSpeed = 250.f;
+	Server_IsCombatMode(true, false, true, 250.f, TEXT("Equip"));
 }
 
 void AHonorProjectCharacter::ReleasedLockOn()
 {
-	Server_IsCombatMode(false, true, false, 600.f);
-
-	// 클라이언트에서도 동일하게 동작해야 하기에 다시 넣는다.
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->bUseControllerDesiredRotation = false;
-
-	GetCharacterMovement()->MaxWalkSpeed = 600.f;
+	Server_IsCombatMode(false, true, false, 600.f, TEXT("Unequip"));
 }
 
 void AHonorProjectCharacter::TurnAtRate(float Rate)
