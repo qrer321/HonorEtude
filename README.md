@@ -1,5 +1,10 @@
 # HonorProject
 https://outrageous-trunk-104.notion.site/KATANA-HONOR-ETUDE-aacb81cdee91471d8acd02a540f9dbbd
+
+홍상범
+qrer321@naver.com
+
+언리얼 포트폴리오 입니다.
  
 Katana Project를 통해 언리얼의 사용법 및 활용방법을 익혔다면
 
