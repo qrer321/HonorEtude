@@ -40,6 +40,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Replicated)
 	bool m_IsCombatMode;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Replicated)
+	float m_ClosestEnemyDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Replicated)
+	class AMasterAICharacter* m_ClosestEnemy;
+
+	FTimerHandle m_RotateTickTimer;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -56,11 +64,14 @@ public:
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void Client_PlayMontage(UAnimMontage* AnimMontage, float InPlayRate = 1.f, FName StartSocketName = NAME_None);
 
-	
 public:
 	bool IsCombatMode() const { return m_IsCombatMode; }
 
 	UStaticMeshComponent* GetWeaponMeshComponent() const { return m_SMSword; }
+
+public:
+	void FindClosestEnemy();
+	void RotateToTarget();
 
 protected:
 	void PressedLockOn();

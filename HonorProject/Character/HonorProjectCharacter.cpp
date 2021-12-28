@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "MasterAICharacter.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AHonorProjectCharacter
@@ -93,6 +94,7 @@ void AHonorProjectCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 	//DOREPLIFETIME_CONDITION(AHonorProjectCharacter, m_IsCombatMode, COND_SkipOwner);
 	DOREPLIFETIME(AHonorProjectCharacter, m_IsCombatMode);
+	DOREPLIFETIME(AHonorProjectCharacter, m_ClosestEnemyDistance);
 }
 
 void AHonorProjectCharacter::Server_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation,
@@ -113,9 +115,24 @@ void AHonorProjectCharacter::Client_IsCombatMode_Implementation(bool IsCombatMod
 	bool UseControllerDesiredRotation, float MaxWalkSpeed, FName SectionName)
 {
 	m_IsCombatMode = IsCombatMode;
+	if (m_IsCombatMode)
+	{
+		FindClosestEnemy();
+		GetWorldTimerManager().SetTimer(m_RotateTickTimer, this, &AHonorProjectCharacter::RotateToTarget, 0.01f, true);
+	}
+	else
+	{
+		if (IsValid(m_ClosestEnemy))
+		{
+			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
+			GetWorldTimerManager().ClearTimer(m_RotateTickTimer);
+			
+			m_ClosestEnemy = nullptr;
+		}
+	}
+	
 	GetCharacterMovement()->bOrientRotationToMovement = UseOrientRotation;
 	GetCharacterMovement()->bUseControllerDesiredRotation = UseControllerDesiredRotation;
-
 	GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
 }
 
@@ -127,6 +144,61 @@ void AHonorProjectCharacter::Server_PlayMontage_Implementation(UAnimMontage* Ani
 void AHonorProjectCharacter::Client_PlayMontage_Implementation(UAnimMontage* AnimMontage, float InPlayRate, FName StartSocketName)
 {
 	PlayAnimMontage(AnimMontage, InPlayRate, StartSocketName);
+}
+
+/*
+ * 	가장 가까이 있는 Enemy를 찾아낸다.
+ * 	하지만 이 방법은 월드에 존재하는 모든 MasterAI 액터들을 찾아내고 있기 때문에
+ * 	성능 상에 문제가 발생할 수도 있다.
+ *
+ * 	SweepMultiByChannel 방식으로 변경하여야 한다
+ * 	해당 방법은 KatanaProject를 진행하며 만들었던 Detect 함수를 사용한다.
+*/
+void AHonorProjectCharacter::FindClosestEnemy()
+{
+	m_ClosestEnemyDistance = TNumericLimits<float>::Max();
+
+	TArray<AActor*> AllEnemyActor;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMasterAICharacter::StaticClass(), AllEnemyActor);
+
+	for (const auto& actor : AllEnemyActor)
+	{
+		const float DistanceDiff = actor->GetDistanceTo(this);
+		if (DistanceDiff < m_ClosestEnemyDistance)
+		{
+			m_ClosestEnemyDistance = DistanceDiff;
+			m_ClosestEnemy = Cast<AMasterAICharacter>(actor);
+			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
+		}
+	}
+
+	m_ClosestEnemy->GetTargetDecal()->SetVisibility(true);
+}
+
+/*
+ *	SetActorRotation으로 액터의 회전을 결정하기 위해서는 기본적으로 Replicate 할 필요가 있다.
+ *	하지만 SetControlRotation을 사용하면 Replicate 할 필요가 없다.
+ *	왜냐하면 해당 함수는 CharacterMovement 컴포넌트를 통해 움직임이 복제되기 때문이다.
+ */
+void AHonorProjectCharacter::RotateToTarget()
+{
+	if (!IsValid(m_ClosestEnemy))
+		return;
+
+	const FRotator CurrentRotation = GetActorRotation();
+	const FVector CurrentLocation = GetActorLocation();
+	const FVector TargetLocation = m_ClosestEnemy->GetActorLocation();
+	
+	const float ToTargetYaw = UKismetMathLibrary::FindLookAtRotation(CurrentLocation, TargetLocation).Yaw;
+	const FRotator ToTargetRotation = { CurrentRotation.Pitch, ToTargetYaw, CurrentRotation.Roll };
+
+	const FRotator DesiredRotation = UKismetMathLibrary::RInterpTo(CurrentRotation, ToTargetRotation, GetWorld()->GetDeltaSeconds(), 5.f);
+
+	AController* PlayerController = GetController();
+	if (IsValid(PlayerController))
+	{
+		PlayerController->SetControlRotation(DesiredRotation);
+	}
 }
 
 void AHonorProjectCharacter::PressedLockOn()
