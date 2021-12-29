@@ -18,6 +18,9 @@ protected:
 
 public:
 	UAttackReticleHUD* GetAttackReticleHUD() const { return m_AttackReticleHUD; }
+	
+	void SetAttackReticleVisibility(ESlateVisibility HUDVisibility) const;
+	void SetAttackReticleOpacity(EAttackDirection AttackDirection) const;
 
 protected:
 	virtual void NativeConstruct() override;

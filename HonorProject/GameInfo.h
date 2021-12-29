@@ -15,3 +15,12 @@ DECLARE_LOG_CATEGORY_EXTERN(HonorProject, Log, All);
 #define LOGSTRING(Str)	 UE_LOG(HonorProject, Warning, TEXT("%s : %s"), *LOG_CALLINFO, *Str)
 
 void PrintViewport(float _fTime, const FColor& _Color, const FString& _Text);
+
+UENUM(Blueprintable)
+enum class EAttackDirection : uint8
+{
+	Up,
+	Left,
+	Right,
+	None
+};

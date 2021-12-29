@@ -4,6 +4,7 @@
 
 #include "../GameInfo.h"
 #include "GameFramework/Character.h"
+#include "CharacterController.h"
 #include "CharacterAnimInstance.h"
 #include "HonorProjectCharacter.generated.h"
 
@@ -21,11 +22,17 @@ class AHonorProjectCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* m_SMSword;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Controller, meta = (AllowPrivateAccess = "true"))
+	ACharacterController* m_CharacterController;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
 	UCharacterAnimInstance* m_AnimInstance;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* m_EquipAnimMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category =  Combat, meta = (AllowPrivateAccess = "true"), Replicated)
+	class AMasterAICharacter* m_ClosestEnemy;
 	
 public:
 	AHonorProjectCharacter();
@@ -37,19 +44,21 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category =  Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	bool m_IsCombatMode;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category =  Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	float m_ClosestEnemyDistance;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Replicated)
-	class AMasterAICharacter* m_ClosestEnemy;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category =  Combat, meta = (AllowPrivateAccess = "true"))
+	EAttackDirection m_AttackDirection;
 
-	FTimerHandle m_RotateTickTimer;
+	FTimerHandle m_ToTargetRotateTimer;
+	FTimerHandle m_DetectAttackDirectionTimer;
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
@@ -68,10 +77,7 @@ public:
 	void Client_FindClosestEnemy();
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void Client_ShowReticle();
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void Client_HideReticle();
+	void Client_ReticleVisibility();
 
 public:
 	bool IsCombatMode() const { return m_IsCombatMode; }
@@ -79,8 +85,12 @@ public:
 	UStaticMeshComponent* GetWeaponMeshComponent() const { return m_SMSword; }
 
 public:
-	void RotateToTarget() const;
 	void SetTargetRotateTimer();
+	void SetDetectAttackDirectionTimer();
+	
+	void RotateToTarget() const;
+	void DetectAttackDirection();
+	
 
 protected:
 	void PressedLockOn();

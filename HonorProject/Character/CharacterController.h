@@ -30,7 +30,7 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void Server_AddMainHUDToViewport();
-	UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(Client, Reliable)
 	void Client_AddMainHUDToViewport();
 
 public:

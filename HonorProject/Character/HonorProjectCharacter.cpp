@@ -67,7 +67,16 @@ void AHonorProjectCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	m_CharacterController = Cast<ACharacterController>(GetController());
 	m_AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+	m_AttackDirection = EAttackDirection::None;
+}
+
+void AHonorProjectCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	PrintViewport(0.001f, FColor::Red, FString::Printf(TEXT("%d"), m_AttackDirection));
 }
 
 void AHonorProjectCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -98,18 +107,21 @@ void AHonorProjectCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	DOREPLIFETIME(AHonorProjectCharacter, m_ClosestEnemy);
 }
 
+/*
+ * RunonServer로 설정된 Server_IsCombatMode( ) 함수를 호출하면
+ * NetMulticast로 설정된 Client_IsCombatMode( ) 함수를 호출하게 된다.
+ *
+ * 전체적인 흐름으로는 클라이언트 A가 Server 함수를 호출하면
+ * 해당 Server 함수가 서버에서 Client 함수를 호출하게 되고
+ * 서버와 클라이언트 B를 포함한 다른 모든 클라이언트에서 B 함수가 호출된다.
+ */
 void AHonorProjectCharacter::Server_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation,
                                                                 bool UseControllerDesiredRotation, float MaxWalkSpeed,
                                                                 FName SectionName)
 {
-	// RunonServer로 설정된 Server_IsCombatMode( ) 함수를 호출하면
-	// NetMulticast로 설정된 Client_IsCombatMode( ) 함수를 호출하게 된다.
-	
-	// 전체적인 흐름으로는 클라이언트 A가 Server 함수를 호출하면
-	// 해당 Server 함수가 서버에서 Client 함수를 호출하게 되고
-	// 서버와 클라이언트 B를 포함한 다른 모든 클라이언트에서 B 함수가 호출된다.
 	Client_IsCombatMode(IsCombatMode, UseOrientRotation, UseControllerDesiredRotation, MaxWalkSpeed, SectionName);
 	Client_FindClosestEnemy();
+	Client_ReticleVisibility();
 	Server_PlayMontage(m_EquipAnimMontage, 1.f, SectionName);
 }
 
@@ -166,16 +178,51 @@ void AHonorProjectCharacter::Client_FindClosestEnemy_Implementation()
 	m_ClosestEnemy->GetTargetDecal()->SetVisibility(true);
 
 	SetTargetRotateTimer();
+	SetDetectAttackDirectionTimer();
 }
 
-void AHonorProjectCharacter::Client_ShowReticle_Implementation()
+void AHonorProjectCharacter::Client_ReticleVisibility_Implementation()
 {
-	
+	if (m_IsCombatMode)
+		m_CharacterController->GetMainHUD()->SetAttackReticleVisibility(ESlateVisibility::HitTestInvisible);
+	else
+		m_CharacterController->GetMainHUD()->SetAttackReticleVisibility(ESlateVisibility::Hidden);
 }
 
-void AHonorProjectCharacter::Client_HideReticle_Implementation()
+void AHonorProjectCharacter::SetTargetRotateTimer()
 {
-	
+	if (m_IsCombatMode)
+	{
+		GetWorldTimerManager().SetTimer(m_ToTargetRotateTimer, this, &AHonorProjectCharacter::RotateToTarget, 0.01f, true);
+	}
+	else
+	{
+		if (IsValid(m_ClosestEnemy))
+		{
+			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
+			GetWorldTimerManager().ClearTimer(m_ToTargetRotateTimer);
+			
+			m_ClosestEnemy = nullptr;
+		}
+	}
+}
+
+void AHonorProjectCharacter::SetDetectAttackDirectionTimer()
+{
+	if (m_IsCombatMode)
+	{
+		GetWorldTimerManager().SetTimer(m_DetectAttackDirectionTimer, this, &AHonorProjectCharacter::DetectAttackDirection, 0.01f, true);
+	}
+	else
+	{
+		// 다음번 LockOn을 위해 Reticle 알파값 초기화
+		m_AttackDirection = EAttackDirection::None;
+		const UMainHUD* MainHUD = m_CharacterController->GetMainHUD();
+		if (IsValid(MainHUD))
+			MainHUD->SetAttackReticleOpacity(m_AttackDirection);
+		
+		GetWorldTimerManager().ClearTimer(m_DetectAttackDirectionTimer);
+	}
 }
 
 /*
@@ -204,21 +251,33 @@ void AHonorProjectCharacter::RotateToTarget() const
 	GetController()->SetControlRotation(DesiredRotation);
 }
 
-void AHonorProjectCharacter::SetTargetRotateTimer()
+/*
+ * PlayerController 클래스의 GetInputMouseDelta( ) 함수를 사용하여
+ * 순간적인 마우스의 방향을 알아내어 플레이어가 공격 혹은 방어하고자 하는 방향을 알아낸다
+ */
+void AHonorProjectCharacter::DetectAttackDirection()
 {
-	if (m_IsCombatMode)
+	float TurnValue = 0.f, UpValue = 0.f;
+	m_CharacterController->GetInputMouseDelta(TurnValue, UpValue);
+
+	EAttackDirection AttackDirection = EAttackDirection::None;
+	if (TurnValue > 0.5f)
+		AttackDirection = EAttackDirection::Right;
+
+	if (TurnValue < -0.5f)
+		AttackDirection = EAttackDirection::Left;
+
+	if (UpValue > 0.5f)
+		AttackDirection = EAttackDirection::Up;
+
+	// 공격 방향이 이전과 동일하지 않은 경우에만 Opacity 설정
+	if (AttackDirection != EAttackDirection::None && m_AttackDirection != AttackDirection)
 	{
-		GetWorldTimerManager().SetTimer(m_RotateTickTimer, this, &AHonorProjectCharacter::RotateToTarget, 0.01f, true);
-	}
-	else
-	{
-		if (IsValid(m_ClosestEnemy))
-		{
-			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
-			GetWorldTimerManager().ClearTimer(m_RotateTickTimer);
-			
-			m_ClosestEnemy = nullptr;
-		}
+		m_AttackDirection = AttackDirection;
+
+		const UMainHUD* MainHUD = m_CharacterController->GetMainHUD();
+		if (IsValid(MainHUD))
+			MainHUD->SetAttackReticleOpacity(m_AttackDirection);
 	}
 }
 
