@@ -95,6 +95,7 @@ void AHonorProjectCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	//DOREPLIFETIME_CONDITION(AHonorProjectCharacter, m_IsCombatMode, COND_SkipOwner);
 	DOREPLIFETIME(AHonorProjectCharacter, m_IsCombatMode);
 	DOREPLIFETIME(AHonorProjectCharacter, m_ClosestEnemyDistance);
+	DOREPLIFETIME(AHonorProjectCharacter, m_ClosestEnemy);
 }
 
 void AHonorProjectCharacter::Server_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation,
@@ -108,6 +109,7 @@ void AHonorProjectCharacter::Server_IsCombatMode_Implementation(bool IsCombatMod
 	// 해당 Server 함수가 서버에서 Client 함수를 호출하게 되고
 	// 서버와 클라이언트 B를 포함한 다른 모든 클라이언트에서 B 함수가 호출된다.
 	Client_IsCombatMode(IsCombatMode, UseOrientRotation, UseControllerDesiredRotation, MaxWalkSpeed, SectionName);
+	Client_FindClosestEnemy();
 	Server_PlayMontage(m_EquipAnimMontage, 1.f, SectionName);
 }
 
@@ -115,21 +117,6 @@ void AHonorProjectCharacter::Client_IsCombatMode_Implementation(bool IsCombatMod
 	bool UseControllerDesiredRotation, float MaxWalkSpeed, FName SectionName)
 {
 	m_IsCombatMode = IsCombatMode;
-	if (m_IsCombatMode)
-	{
-		FindClosestEnemy();
-		GetWorldTimerManager().SetTimer(m_RotateTickTimer, this, &AHonorProjectCharacter::RotateToTarget, 0.01f, true);
-	}
-	else
-	{
-		if (IsValid(m_ClosestEnemy))
-		{
-			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
-			GetWorldTimerManager().ClearTimer(m_RotateTickTimer);
-			
-			m_ClosestEnemy = nullptr;
-		}
-	}
 	
 	GetCharacterMovement()->bOrientRotationToMovement = UseOrientRotation;
 	GetCharacterMovement()->bUseControllerDesiredRotation = UseControllerDesiredRotation;
@@ -153,8 +140,12 @@ void AHonorProjectCharacter::Client_PlayMontage_Implementation(UAnimMontage* Ani
  *
  * 	SweepMultiByChannel 방식으로 변경하여야 한다
  * 	해당 방법은 KatanaProject를 진행하며 만들었던 Detect 함수를 사용한다.
+ *
+ * 	가장 가까운 적을 찾아 쫓는건 하나의 클라이언트에서만 동작해야 한다
+ * 	즉, 타겟 액터를 소유한 클라이언트에서만 실행되야 하는 함수이다
+ * 	따라서 Server도 NetMulticast도 일반 함수도 아닌 Client로만 실행시킨다
 */
-void AHonorProjectCharacter::FindClosestEnemy()
+void AHonorProjectCharacter::Client_FindClosestEnemy_Implementation()
 {
 	m_ClosestEnemyDistance = TNumericLimits<float>::Max();
 
@@ -173,14 +164,26 @@ void AHonorProjectCharacter::FindClosestEnemy()
 	}
 
 	m_ClosestEnemy->GetTargetDecal()->SetVisibility(true);
+
+	SetTargetRotateTimer();
+}
+
+void AHonorProjectCharacter::Client_ShowReticle_Implementation()
+{
+	
+}
+
+void AHonorProjectCharacter::Client_HideReticle_Implementation()
+{
+	
 }
 
 /*
  *	SetActorRotation으로 액터의 회전을 결정하기 위해서는 기본적으로 Replicate 할 필요가 있다.
  *	하지만 SetControlRotation을 사용하면 Replicate 할 필요가 없다.
- *	왜냐하면 해당 함수는 CharacterMovement 컴포넌트를 통해 움직임이 복제되기 때문이다.
+ *	왜냐하면 컨트롤러의 이동은 UCharacterMovementComponent를 통해 움직임이 복제되기 때문이다.
  */
-void AHonorProjectCharacter::RotateToTarget()
+void AHonorProjectCharacter::RotateToTarget() const
 {
 	if (!IsValid(m_ClosestEnemy))
 		return;
@@ -188,16 +191,34 @@ void AHonorProjectCharacter::RotateToTarget()
 	const FRotator CurrentRotation = GetActorRotation();
 	const FVector CurrentLocation = GetActorLocation();
 	const FVector TargetLocation = m_ClosestEnemy->GetActorLocation();
-	
+
+	// PlayerActor의 위치에서 TargetActor의 위치를 바라보도록
+	// FindLookAtRotation 함수를 사용하여 회전값을 알아낸다.
+	// Actor의 회전에서는 Yaw값만이 필요함으로 Yaw(Z) 값만 추출해서 사용한다.
 	const float ToTargetYaw = UKismetMathLibrary::FindLookAtRotation(CurrentLocation, TargetLocation).Yaw;
 	const FRotator ToTargetRotation = { CurrentRotation.Pitch, ToTargetYaw, CurrentRotation.Roll };
 
+	// 현재 Actor의 회전 값에서 Target을 바라볼 회전값의 차를 보간한다
 	const FRotator DesiredRotation = UKismetMathLibrary::RInterpTo(CurrentRotation, ToTargetRotation, GetWorld()->GetDeltaSeconds(), 5.f);
 
-	AController* PlayerController = GetController();
-	if (IsValid(PlayerController))
+	GetController()->SetControlRotation(DesiredRotation);
+}
+
+void AHonorProjectCharacter::SetTargetRotateTimer()
+{
+	if (m_IsCombatMode)
 	{
-		PlayerController->SetControlRotation(DesiredRotation);
+		GetWorldTimerManager().SetTimer(m_RotateTickTimer, this, &AHonorProjectCharacter::RotateToTarget, 0.01f, true);
+	}
+	else
+	{
+		if (IsValid(m_ClosestEnemy))
+		{
+			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
+			GetWorldTimerManager().ClearTimer(m_RotateTickTimer);
+			
+			m_ClosestEnemy = nullptr;
+		}
 	}
 }
 

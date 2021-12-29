@@ -2,6 +2,7 @@
 
 #include "HonorProjectGameMode.h"
 #include "Character/HonorProjectCharacter.h"
+#include "Character/CharacterController.h"
 
 AHonorProjectGameMode::AHonorProjectGameMode()
 {
@@ -9,4 +10,6 @@ AHonorProjectGameMode::AHonorProjectGameMode()
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/HonorProejct/Character/BPThirdPersonCharacter"));
 	if (PlayerPawnBPClass.Succeeded())
 		DefaultPawnClass = PlayerPawnBPClass.Class;
+
+	PlayerControllerClass = ACharacterController::StaticClass();
 }

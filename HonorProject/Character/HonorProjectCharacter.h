@@ -64,14 +64,23 @@ public:
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void Client_PlayMontage(UAnimMontage* AnimMontage, float InPlayRate = 1.f, FName StartSocketName = NAME_None);
 
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_FindClosestEnemy();
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_ShowReticle();
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_HideReticle();
+
 public:
 	bool IsCombatMode() const { return m_IsCombatMode; }
 
 	UStaticMeshComponent* GetWeaponMeshComponent() const { return m_SMSword; }
 
 public:
-	void FindClosestEnemy();
-	void RotateToTarget();
+	void RotateToTarget() const;
+	void SetTargetRotateTimer();
 
 protected:
 	void PressedLockOn();
