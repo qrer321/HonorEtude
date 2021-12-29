@@ -31,7 +31,7 @@ class AHonorProjectCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* m_EquipAnimMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category =  Combat, meta = (AllowPrivateAccess = "true"), Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	class AMasterAICharacter* m_ClosestEnemy;
 	
 public:
@@ -44,13 +44,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category =  Combat, meta = (AllowPrivateAccess = "true"), Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	bool m_IsCombatMode;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category =  Combat, meta = (AllowPrivateAccess = "true"), Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	float m_ClosestEnemyDistance;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category =  Combat, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	EAttackDirection m_AttackDirection;
 
 	FTimerHandle m_ToTargetRotateTimer;

@@ -75,8 +75,6 @@ void AHonorProjectCharacter::BeginPlay()
 void AHonorProjectCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	PrintViewport(0.001f, FColor::Red, FString::Printf(TEXT("%d"), m_AttackDirection));
 }
 
 void AHonorProjectCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
