@@ -89,9 +89,9 @@ void AHonorProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Pl
 	PlayerInputComponent->BindAxis("MoveForward", this, &AHonorProjectCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AHonorProjectCharacter::MoveRight);
 
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("Turn", this, &AHonorProjectCharacter::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("TurnRate", this, &AHonorProjectCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("LookUp", this, &AHonorProjectCharacter::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AHonorProjectCharacter::LookUpAtRate);
 }
 
@@ -103,6 +103,7 @@ void AHonorProjectCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	DOREPLIFETIME(AHonorProjectCharacter, m_IsCombatMode);
 	DOREPLIFETIME(AHonorProjectCharacter, m_ClosestEnemyDistance);
 	DOREPLIFETIME(AHonorProjectCharacter, m_ClosestEnemy);
+	DOREPLIFETIME(AHonorProjectCharacter, m_AttackDirection);
 }
 
 /*
@@ -287,6 +288,18 @@ void AHonorProjectCharacter::PressedLockOn()
 void AHonorProjectCharacter::ReleasedLockOn()
 {
 	Server_IsCombatMode(false, true, false, 600.f, TEXT("Unequip"));
+}
+
+void AHonorProjectCharacter::AddControllerYawInput(float Val)
+{
+	if (!m_IsCombatMode)
+		Super::AddControllerYawInput(Val);
+}
+
+void AHonorProjectCharacter::AddControllerPitchInput(float Val)
+{
+	if (!m_IsCombatMode)
+		Super::AddControllerPitchInput(Val);
 }
 
 void AHonorProjectCharacter::TurnAtRate(float Rate)

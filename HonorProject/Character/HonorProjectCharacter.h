@@ -50,7 +50,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	float m_ClosestEnemyDistance;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	EAttackDirection m_AttackDirection;
 
 	FTimerHandle m_ToTargetRotateTimer;
@@ -84,6 +84,9 @@ public:
 
 	UStaticMeshComponent* GetWeaponMeshComponent() const { return m_SMSword; }
 
+	UFUNCTION(BlueprintCallable)
+	EAttackDirection GetAttackDirection() const { return m_AttackDirection; }
+
 public:
 	void SetTargetRotateTimer();
 	void SetDetectAttackDirectionTimer();
@@ -98,7 +101,10 @@ protected:
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
-	
+
+
+	virtual void AddControllerYawInput(float Val) override;
+	virtual void AddControllerPitchInput(float Val) override;
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
 
