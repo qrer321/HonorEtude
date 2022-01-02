@@ -2,6 +2,8 @@
 
 #include "HonorProjectCharacter.h"
 
+#include <functional>
+
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -46,21 +48,33 @@ AHonorProjectCharacter::AHonorProjectCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-
-	m_SMSword = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SM_Sword"));
 	
+	m_SKSword = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SK_Sword"));
+
 	const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
-	m_SMSword->AttachToComponent(GetMesh(), rules, TEXT("S_Unequip"));
-	m_SMSword->SetIsReplicated(true);
-	
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> SwordAsset(TEXT("StaticMesh'/Game/GKnight/Meshes/Weapon/SM_WP_GothicKnight_Sword.SM_WP_GothicKnight_Sword'"));
-	if (SwordAsset.Succeeded())
-		m_SMSword->SetStaticMesh(SwordAsset.Object);
+	m_SKSword->AttachToComponent(GetMesh(), rules, TEXT("S_Unequip"));
+	m_SKSword->SetIsReplicated(true);
+
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SKSwordAsset(TEXT("SkeletalMesh'/Game/GKnight/Meshes/Weapon/SK_WP_GothicKnight_Sword.SK_WP_GothicKnight_Sword_SM_WP_GothicKnight_Sword'"));
+	if (SKSwordAsset.Succeeded())
+		m_SKSword->SetSkeletalMesh(SKSwordAsset.Object);
 
 
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> EquipAnimAsset(TEXT("AnimMontage'/Game/HonorProejct/Character/AnimMontage/GreatSword_Equip_Montage.GreatSword_Equip_Montage'"));
-	if (EquipAnimAsset.Succeeded())
-		m_EquipAnimMontage = EquipAnimAsset.Object;
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> EquipAsset(TEXT("AnimMontage'/Game/HonorProejct/Character/AnimMontage/GreatSword_Equip_Montage.GreatSword_Equip_Montage'"));
+	if (EquipAsset.Succeeded())
+		m_EquipAnimMontage = EquipAsset.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackUpAsset(TEXT("AnimMontage'/Game/HonorProejct/Character/AnimMontage/GreatSword_Attack_Up_Montage.GreatSword_Attack_Up_Montage'"));
+	if (AttackUpAsset.Succeeded())
+		m_AttackUpMontage = AttackUpAsset.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackLeftAsset(TEXT("AnimMontage'/Game/HonorProejct/Character/AnimMontage/GreatSword_Attack_Left_Montage.GreatSword_Attack_Left_Montage'"));
+	if (AttackLeftAsset.Succeeded())
+		m_AttackLeftMontage = AttackLeftAsset.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackRightAsset(TEXT("AnimMontage'/Game/HonorProejct/Character/AnimMontage/GreatSword_Attack_Right_Montage.GreatSword_Attack_Right_Montage'"));
+	if (AttackRightAsset.Succeeded())
+		m_AttackRightMontage = AttackRightAsset.Object;
 }
 
 void AHonorProjectCharacter::BeginPlay()
@@ -85,6 +99,7 @@ void AHonorProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Pl
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("LockOn", IE_Pressed, this, &AHonorProjectCharacter::PressedLockOn);
 	PlayerInputComponent->BindAction("LockOn", IE_Released, this, &AHonorProjectCharacter::ReleasedLockOn);
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AHonorProjectCharacter::PressedAttack);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AHonorProjectCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AHonorProjectCharacter::MoveRight);
@@ -118,13 +133,13 @@ void AHonorProjectCharacter::Server_IsCombatMode_Implementation(bool IsCombatMod
                                                                 bool UseControllerDesiredRotation, float MaxWalkSpeed,
                                                                 FName SectionName)
 {
-	Client_IsCombatMode(IsCombatMode, UseOrientRotation, UseControllerDesiredRotation, MaxWalkSpeed, SectionName);
+	MultiCast_IsCombatMode(IsCombatMode, UseOrientRotation, UseControllerDesiredRotation, MaxWalkSpeed, SectionName);
 	Client_FindClosestEnemy();
 	Client_ReticleVisibility();
 	Server_PlayMontage(m_EquipAnimMontage, 1.f, SectionName);
 }
 
-void AHonorProjectCharacter::Client_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation,
+void AHonorProjectCharacter::MultiCast_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation,
 	bool UseControllerDesiredRotation, float MaxWalkSpeed, FName SectionName)
 {
 	m_IsCombatMode = IsCombatMode;
@@ -136,12 +151,76 @@ void AHonorProjectCharacter::Client_IsCombatMode_Implementation(bool IsCombatMod
 
 void AHonorProjectCharacter::Server_PlayMontage_Implementation(UAnimMontage* AnimMontage, float InPlayRate, FName StartSocketName)
 {
-	Client_PlayMontage(AnimMontage, InPlayRate, StartSocketName);
+	MultiCast_PlayMontage(AnimMontage, InPlayRate, StartSocketName);
 }
 
-void AHonorProjectCharacter::Client_PlayMontage_Implementation(UAnimMontage* AnimMontage, float InPlayRate, FName StartSocketName)
+void AHonorProjectCharacter::MultiCast_PlayMontage_Implementation(UAnimMontage* AnimMontage, float InPlayRate, FName StartSocketName)
 {
 	PlayAnimMontage(AnimMontage, InPlayRate, StartSocketName);
+}
+
+/*
+ * 각각의 클라이언트가 가지고 있는 AttackDirection을 서버에 전송하여
+ * 모든 클라이언트가 다른 클라이언트의 AttackDirection을 알도록 만든다
+ */
+void AHonorProjectCharacter::Server_SetAttackDirection_Implementation(EAttackDirection AttackDirection)
+{
+	MultiCast_SetAttackDirection(AttackDirection);
+}
+
+void AHonorProjectCharacter::MultiCast_SetAttackDirection_Implementation(EAttackDirection AttackDirection)
+{
+	m_AttackDirection = AttackDirection;
+
+	if (IsValid(m_CharacterController))
+	{
+		const UMainHUD* MainHUD = m_CharacterController->GetMainHUD();
+		if (IsValid(MainHUD))
+			MainHUD->SetAttackReticleOpacity(m_AttackDirection);		
+	}
+}
+
+/*
+ * 서버에 저장되고 있는 AttackDirection에 따라서
+ * 각각 다른 애니메이션 몽타주를 재생한다
+ * 한 방향에 따른 콤보 애니메이션이 추가된다면
+ * StartSocketName 인자를 활용하게 만든다
+ */
+void AHonorProjectCharacter::Server_Attack_Implementation()
+{
+	MultiCast_Attack();
+}
+
+void AHonorProjectCharacter::MultiCast_Attack_Implementation()
+{
+	UAnimMontage* AnimMontage = nullptr;
+	
+	EAttackDirection AttackDirection = GetAttackDirection();
+	switch (static_cast<uint8>(AttackDirection))
+	{
+	case EAttackDirection::Up:
+		AnimMontage = m_AttackUpMontage;
+		break;
+	case EAttackDirection::Left:
+		AnimMontage = m_AttackLeftMontage;
+		break;
+	case EAttackDirection::Right:
+		AnimMontage = m_AttackRightMontage;
+		break;
+	default:
+		break;
+	}
+
+	bUseControllerRotationYaw = true;
+	Server_PlayMontage(AnimMontage, 1.f, NAME_None);
+	UAnimMontage* CurrentMontage = GetCurrentMontage();
+	if (IsValid(CurrentMontage))
+	{
+		const float AnimLength = CurrentMontage->GetPlayLength();
+		PrintViewport(3.f, FColor::Yellow, FString::Printf(TEXT("AnimLength : %f"), AnimLength));
+	
+		SetControllerYawTimer(AnimLength);
+	}
 }
 
 /*
@@ -206,24 +285,6 @@ void AHonorProjectCharacter::SetTargetRotateTimer()
 	}
 }
 
-void AHonorProjectCharacter::SetDetectAttackDirectionTimer()
-{
-	if (m_IsCombatMode)
-	{
-		GetWorldTimerManager().SetTimer(m_DetectAttackDirectionTimer, this, &AHonorProjectCharacter::DetectAttackDirection, 0.01f, true);
-	}
-	else
-	{
-		// 다음번 LockOn을 위해 Reticle 알파값 초기화
-		m_AttackDirection = EAttackDirection::None;
-		const UMainHUD* MainHUD = m_CharacterController->GetMainHUD();
-		if (IsValid(MainHUD))
-			MainHUD->SetAttackReticleOpacity(m_AttackDirection);
-		
-		GetWorldTimerManager().ClearTimer(m_DetectAttackDirectionTimer);
-	}
-}
-
 /*
  *	SetActorRotation으로 액터의 회전을 결정하기 위해서는 기본적으로 Replicate 할 필요가 있다.
  *	하지만 SetControlRotation을 사용하면 Replicate 할 필요가 없다.
@@ -250,12 +311,37 @@ void AHonorProjectCharacter::RotateToTarget() const
 	GetController()->SetControlRotation(DesiredRotation);
 }
 
+void AHonorProjectCharacter::SetDetectAttackDirectionTimer()
+{
+	if (!IsValid(m_CharacterController))
+		return;
+	
+	if (m_IsCombatMode)
+	{
+		GetWorldTimerManager().SetTimer(m_DetectAttackDirectionTimer, this, &AHonorProjectCharacter::DetectAttackDirection, 0.01f, true);
+	}
+	else
+	{
+		// 다음번 LockOn을 위해 Reticle 알파값 초기화
+		//m_AttackDirection = EAttackDirection::None;
+		Server_SetAttackDirection(EAttackDirection::None);
+		const UMainHUD* MainHUD = m_CharacterController->GetMainHUD();
+		if (IsValid(MainHUD))
+			MainHUD->SetAttackReticleOpacity(m_AttackDirection);
+		
+		GetWorldTimerManager().ClearTimer(m_DetectAttackDirectionTimer);
+	}
+}
+
 /*
  * PlayerController 클래스의 GetInputMouseDelta( ) 함수를 사용하여
  * 순간적인 마우스의 방향을 알아내어 플레이어가 공격 혹은 방어하고자 하는 방향을 알아낸다
  */
 void AHonorProjectCharacter::DetectAttackDirection()
 {
+	if (!IsValid(m_CharacterController))
+		return;
+	
 	float TurnValue = 0.f, UpValue = 0.f;
 	m_CharacterController->GetInputMouseDelta(TurnValue, UpValue);
 
@@ -272,12 +358,19 @@ void AHonorProjectCharacter::DetectAttackDirection()
 	// 공격 방향이 이전과 동일하지 않은 경우에만 Opacity 설정
 	if (AttackDirection != EAttackDirection::None && m_AttackDirection != AttackDirection)
 	{
-		m_AttackDirection = AttackDirection;
-
-		const UMainHUD* MainHUD = m_CharacterController->GetMainHUD();
-		if (IsValid(MainHUD))
-			MainHUD->SetAttackReticleOpacity(m_AttackDirection);
+		//m_AttackDirection = AttackDirection;
+		Server_SetAttackDirection(AttackDirection);
 	}
+}
+
+void AHonorProjectCharacter::SetControllerYawTimer(float AnimMontageLength)
+{
+	GetWorldTimerManager().SetTimer(m_ControllerYawTimer, this, &AHonorProjectCharacter::ResetControllerYaw, AnimMontageLength, false);
+}
+
+void AHonorProjectCharacter::ResetControllerYaw()
+{
+	bUseControllerRotationYaw = false;
 }
 
 void AHonorProjectCharacter::PressedLockOn()
@@ -288,6 +381,15 @@ void AHonorProjectCharacter::PressedLockOn()
 void AHonorProjectCharacter::ReleasedLockOn()
 {
 	Server_IsCombatMode(false, true, false, 600.f, TEXT("Unequip"));
+
+	if (bUseControllerRotationYaw)
+		ResetControllerYaw();
+}
+
+void AHonorProjectCharacter::PressedAttack()
+{
+	if (IsCombatMode())
+		Server_Attack();
 }
 
 void AHonorProjectCharacter::AddControllerYawInput(float Val)

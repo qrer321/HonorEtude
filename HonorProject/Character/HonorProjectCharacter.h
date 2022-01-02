@@ -20,7 +20,7 @@ class AHonorProjectCharacter : public ACharacter
 	class UCameraComponent* FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* m_SMSword;
+	USkeletalMeshComponent* m_SKSword;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Controller, meta = (AllowPrivateAccess = "true"))
 	ACharacterController* m_CharacterController;
@@ -30,6 +30,15 @@ class AHonorProjectCharacter : public ACharacter
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* m_EquipAnimMontage;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* m_AttackUpMontage;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* m_AttackLeftMontage;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* m_AttackRightMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	class AMasterAICharacter* m_ClosestEnemy;
@@ -55,6 +64,7 @@ protected:
 
 	FTimerHandle m_ToTargetRotateTimer;
 	FTimerHandle m_DetectAttackDirectionTimer;
+	FTimerHandle m_ControllerYawTimer;
 
 protected:
 	virtual void BeginPlay() override;
@@ -66,12 +76,22 @@ public:
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_IsCombatMode(bool IsCombatMode, bool UseOrientRotation, bool UseControllerDesiredRotation, float MaxWalkSpeed, FName SectionName = NAME_None);
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void Client_IsCombatMode(bool IsCombatMode, bool UseOrientRotation, bool UseControllerDesiredRotation, float MaxWalkSpeed, FName SectionName = NAME_None);
+	void MultiCast_IsCombatMode(bool IsCombatMode, bool UseOrientRotation, bool UseControllerDesiredRotation, float MaxWalkSpeed, FName SectionName = NAME_None);
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_PlayMontage(UAnimMontage* AnimMontage, float InPlayRate = 1.f, FName StartSocketName = NAME_None);
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void Client_PlayMontage(UAnimMontage* AnimMontage, float InPlayRate = 1.f, FName StartSocketName = NAME_None);
+	void MultiCast_PlayMontage(UAnimMontage* AnimMontage, float InPlayRate = 1.f, FName StartSocketName = NAME_None);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetAttackDirection(EAttackDirection AttackDirection);
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiCast_SetAttackDirection(EAttackDirection AttackDirection);
+
+	UFUNCTION(Server, Reliable)
+	void Server_Attack();
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiCast_Attack();
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_FindClosestEnemy();
@@ -82,22 +102,27 @@ public:
 public:
 	bool IsCombatMode() const { return m_IsCombatMode; }
 
-	UStaticMeshComponent* GetWeaponMeshComponent() const { return m_SMSword; }
+	UFUNCTION(BlueprintCallable)
+	USkeletalMeshComponent* GetWeaponMeshComponent() const { return m_SKSword; }
 
 	UFUNCTION(BlueprintCallable)
 	EAttackDirection GetAttackDirection() const { return m_AttackDirection; }
 
 public:
-	void SetTargetRotateTimer();
-	void SetDetectAttackDirectionTimer();
-	
+	void SetTargetRotateTimer();	
 	void RotateToTarget() const;
+
+	void SetDetectAttackDirectionTimer();
 	void DetectAttackDirection();
-	
+
+	void SetControllerYawTimer(float AnimMontageLength);
+	void ResetControllerYaw();
 
 protected:
 	void PressedLockOn();
 	void ReleasedLockOn();
+
+	void PressedAttack();
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
