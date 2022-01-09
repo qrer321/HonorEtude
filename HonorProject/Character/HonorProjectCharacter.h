@@ -3,13 +3,14 @@
 #pragma once
 
 #include "../GameInfo.h"
+#include "AllCharacter.h"
 #include "GameFramework/Character.h"
 #include "CharacterController.h"
 #include "CharacterAnimInstance.h"
 #include "HonorProjectCharacter.generated.h"
 
 UCLASS(config=Game)
-class AHonorProjectCharacter : public ACharacter
+class AHonorProjectCharacter : public AAllCharacter
 {
 	GENERATED_BODY()
 
@@ -20,7 +21,7 @@ class AHonorProjectCharacter : public ACharacter
 	class UCameraComponent* FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* m_SKSword;
+	UStaticMeshComponent* m_SMSword;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Controller, meta = (AllowPrivateAccess = "true"))
 	ACharacterController* m_CharacterController;
@@ -42,6 +43,9 @@ class AHonorProjectCharacter : public ACharacter
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	class AMasterAICharacter* m_ClosestEnemy;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
+	TArray<AMasterAICharacter*> m_AlreadyDamagedEnemyArray;
 	
 public:
 	AHonorProjectCharacter();
@@ -65,6 +69,7 @@ protected:
 	FTimerHandle m_ToTargetRotateTimer;
 	FTimerHandle m_DetectAttackDirectionTimer;
 	FTimerHandle m_ControllerYawTimer;
+	FTimerHandle m_AttackTraceTimer;
 
 protected:
 	virtual void BeginPlay() override;
@@ -103,7 +108,7 @@ public:
 	bool IsCombatMode() const { return m_IsCombatMode; }
 
 	UFUNCTION(BlueprintCallable)
-	USkeletalMeshComponent* GetWeaponMeshComponent() const { return m_SKSword; }
+	UStaticMeshComponent* GetWeaponMeshComponent() const { return m_SMSword; }
 
 	UFUNCTION(BlueprintCallable)
 	EAttackDirection GetAttackDirection() const { return m_AttackDirection; }
@@ -118,6 +123,9 @@ public:
 	void SetControllerYawTimer(float AnimMontageLength);
 	void ResetControllerYaw();
 
+	void SetAttackTraceTimer(bool SetTimer);
+	void AttackTrace();
+
 protected:
 	void PressedLockOn();
 	void ReleasedLockOn();
@@ -126,7 +134,6 @@ protected:
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
-
 
 	virtual void AddControllerYawInput(float Val) override;
 	virtual void AddControllerPitchInput(float Val) override;

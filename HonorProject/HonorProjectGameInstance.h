@@ -1,34 +1,14 @@
-﻿
+// Fill out your copyright notice in the Description page of Project Settings.
+
 #pragma once
 
-#include "Engine.h"
-#include "Engine\AssetManager.h"
-#include "EngineGlobals.h"
-#include "EngineMinimal.h"
-#include "DrawDebugHelpers.h"
-#include "Net/UnrealNetwork.h"
-#include "Kismet/KismetMathLibrary.h"
-
-DECLARE_LOG_CATEGORY_EXTERN(HonorProject, Log, All);
-#define LOG_CALLINFO (FString(__FUNCTION__) + TEXT("{") + FString::FromInt(__LINE__) + TEXT("}"))
-#define LOG(Format, ...) UE_LOG(HonorProject, Warning, TEXT("%s : %s"), *LOG_CALLINFO, *FString::Printf(Format, ##__VA_ARGS__))
-#define LOGSTRING(Str)	 UE_LOG(HonorProject, Warning, TEXT("%s : %s"), *LOG_CALLINFO, *Str)
-
-void PrintViewport(float _fTime, const FColor& _Color, const FString& _Text);
-
-#include "GameInfo.generated.h"
-
-UENUM(Blueprintable)
-enum class EAttackDirection : uint8
-{
-	Up,
-	Left,
-	Right,
-	None
-};
+#include "GameInfo.h"
+#include "Engine/GameInstance.h"
+#include "HonorProjectGameInstance.generated.h"
 
 USTRUCT(BlueprintType)
-struct FCharacterInfo
+struct FCharacterTableInfo
+	: public FTableRowBase
 {
 	GENERATED_BODY()
 
@@ -62,4 +42,24 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	float MoveSpeed;
+};
+
+UCLASS()
+class HONORPROJECT_API UHonorProjectGameInstance : public UGameInstance
+{
+	GENERATED_BODY()
+
+public:
+	UHonorProjectGameInstance();
+	virtual ~UHonorProjectGameInstance() override;
+
+private:
+	UPROPERTY()
+	UDataTable* m_CharacterInfoTable;
+
+public:
+	virtual void Init() override;
+
+public:
+	const FCharacterTableInfo* FindCharacterInfo(const FString& Name) const;
 };

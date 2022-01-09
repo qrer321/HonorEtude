@@ -3,11 +3,13 @@
 #pragma once
 
 #include "../GameInfo.h"
+#include "AllCharacter.h"
 #include "GameFramework/Character.h"
+#include "Components/WidgetComponent.h"
 #include "MasterAICharacter.generated.h"
 
 UCLASS()
-class HONORPROJECT_API AMasterAICharacter : public ACharacter
+class HONORPROJECT_API AMasterAICharacter : public AAllCharacter
 {
 	GENERATED_BODY()
 
@@ -18,6 +20,12 @@ public:
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UDecalComponent* m_TargetDecal;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* m_HealthHUD;
+
+	UPROPERTY()
+	class UHealthHUD* m_HealthWidget;
 
 public:
 	UDecalComponent* GetTargetDecal() const { return m_TargetDecal; }
@@ -33,4 +41,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+public:
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiCast_CalcDamage(float DamageAmount);
 };

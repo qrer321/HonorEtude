@@ -41,4 +41,10 @@ public:
 
 	UFUNCTION()
 	void AnimNotify_Weapon_Unequip();
+
+	UFUNCTION()
+	void AnimNotify_OnCollision_Start();
+
+	UFUNCTION()
+	void AnimNotify_OnCollision_End();
 };

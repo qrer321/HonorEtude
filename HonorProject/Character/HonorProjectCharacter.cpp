@@ -1,15 +1,13 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "HonorProjectCharacter.h"
-
-#include <functional>
-
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "../HonorProjectGameInstance.h"
 #include "MasterAICharacter.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -49,15 +47,12 @@ AHonorProjectCharacter::AHonorProjectCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 	
-	m_SKSword = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SK_Sword"));
+	m_SMSword = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SM_Sword"));
+	m_SMSword->SetIsReplicated(true);
 
-	const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
-	m_SKSword->AttachToComponent(GetMesh(), rules, TEXT("S_Unequip"));
-	m_SKSword->SetIsReplicated(true);
-
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SKSwordAsset(TEXT("SkeletalMesh'/Game/GKnight/Meshes/Weapon/SK_WP_GothicKnight_Sword.SK_WP_GothicKnight_Sword_SM_WP_GothicKnight_Sword'"));
-	if (SKSwordAsset.Succeeded())
-		m_SKSword->SetSkeletalMesh(SKSwordAsset.Object);
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SMSwordAsset(TEXT("StaticMesh'/Game/GKnight/Meshes/Weapon/SM_WP_GothicKnight_Sword.SM_WP_GothicKnight_Sword'"));
+	if (SMSwordAsset.Succeeded())
+		m_SMSword->SetStaticMesh(SMSwordAsset.Object);
 
 
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> EquipAsset(TEXT("AnimMontage'/Game/HonorProejct/Character/AnimMontage/GreatSword_Equip_Montage.GreatSword_Equip_Montage'"));
@@ -84,6 +79,28 @@ void AHonorProjectCharacter::BeginPlay()
 	m_CharacterController = Cast<ACharacterController>(GetController());
 	m_AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 	m_AttackDirection = EAttackDirection::None;
+
+	const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
+	m_SMSword->AttachToComponent(GetMesh(), rules, TEXT("S_Unequip"));
+
+	const UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+	if (GameInstance)
+	{
+		const FCharacterTableInfo* CharacterInfo = GameInstance->FindCharacterInfo(TEXT("Player"));
+		if (CharacterInfo)
+		{
+			m_CharacterInfo.Name = CharacterInfo->Name;
+			m_CharacterInfo.Attack = CharacterInfo->Attack;
+			m_CharacterInfo.Armor = CharacterInfo->Armor;
+			m_CharacterInfo.HP = CharacterInfo->HP;
+			m_CharacterInfo.HPMax = CharacterInfo->HPMax;
+			m_CharacterInfo.SP = CharacterInfo->SP;
+			m_CharacterInfo.SPMax = CharacterInfo->SPMax;
+			m_CharacterInfo.SPRecoverMaxTime = CharacterInfo->SPRecoverMaxTime;
+			m_CharacterInfo.AttackSpeed = CharacterInfo->AttackSpeed;
+			m_CharacterInfo.MoveSpeed = CharacterInfo->MoveSpeed;
+		}
+	}
 }
 
 void AHonorProjectCharacter::Tick(float DeltaSeconds)
@@ -118,6 +135,7 @@ void AHonorProjectCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	DOREPLIFETIME(AHonorProjectCharacter, m_IsCombatMode);
 	DOREPLIFETIME(AHonorProjectCharacter, m_ClosestEnemyDistance);
 	DOREPLIFETIME(AHonorProjectCharacter, m_ClosestEnemy);
+	DOREPLIFETIME(AHonorProjectCharacter, m_AlreadyDamagedEnemyArray);
 	DOREPLIFETIME(AHonorProjectCharacter, m_AttackDirection);
 }
 
@@ -371,6 +389,61 @@ void AHonorProjectCharacter::SetControllerYawTimer(float AnimMontageLength)
 void AHonorProjectCharacter::ResetControllerYaw()
 {
 	bUseControllerRotationYaw = false;
+}
+
+void AHonorProjectCharacter::SetAttackTraceTimer(bool SetTimer)
+{
+	if (SetTimer)
+	{
+		if (!GetWorldTimerManager().TimerExists(m_AttackTraceTimer))
+			GetWorldTimerManager().SetTimer(m_AttackTraceTimer, this, &AHonorProjectCharacter::AttackTrace, 0.01f, true);		
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(m_AttackTraceTimer);
+		m_AlreadyDamagedEnemyArray.Empty();
+	}
+	
+}
+
+void AHonorProjectCharacter::AttackTrace()
+{
+	const FQuat SwordQuat = m_SMSword->GetComponentRotation().Quaternion();
+	const FVector SwordBottomLocation = m_SMSword->GetSocketLocation(TEXT("S_Bottom"));
+	const FVector SwordTopLocation = m_SMSword->GetSocketLocation(TEXT("S_Top"));
+	
+	const float SocketHalfDiff = UKismetMathLibrary::Vector_Distance(SwordTopLocation, SwordBottomLocation) / 2.f;	
+	FVector ToTopVector = SwordTopLocation - SwordBottomLocation;
+	ToTopVector.Normalize();
+
+	const FVector SwordCenterLocation = SwordBottomLocation + (ToTopVector * SocketHalfDiff);
+
+	TArray<FHitResult> ResultArray;
+	const FCollisionQueryParams ColParam(NAME_None, false, this);
+	bool Detect = GetWorld()->SweepMultiByChannel(ResultArray, SwordBottomLocation, SwordTopLocation, SwordQuat,
+													ECollisionChannel::ECC_GameTraceChannel2, FCollisionShape::MakeSphere(20.f), ColParam);
+	
+
+#ifdef ENABLE_DRAW_DEBUG
+	const FColor DrawColor = Detect ? FColor::Red : FColor::Green;
+	DrawDebugCapsule(GetWorld(), SwordCenterLocation, SocketHalfDiff, 20.f, SwordQuat, DrawColor, false, 3.f);
+#endif
+
+	for (const auto& HitResult : ResultArray)
+	{
+		AMasterAICharacter* HitActor = Cast<AMasterAICharacter>(HitResult.Actor);
+		if (IsValid(HitActor))
+		{
+			// HitActor가 이미 공격당한 Enemy일 경우 무시
+			if (m_AlreadyDamagedEnemyArray.Contains(HitActor))
+				continue;
+			
+			m_AlreadyDamagedEnemyArray.Add(HitActor);
+			
+			FDamageEvent DamageEvent;
+			UGameplayStatics::ApplyDamage(HitActor, m_CharacterInfo.Attack, m_CharacterController, this, nullptr);
+		}
+	}
 }
 
 void AHonorProjectCharacter::PressedLockOn()

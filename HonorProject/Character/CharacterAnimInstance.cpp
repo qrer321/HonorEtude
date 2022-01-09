@@ -69,3 +69,19 @@ void UCharacterAnimInstance::AnimNotify_Weapon_Unequip()
 		m_PlayerCharacter->GetWeaponMeshComponent()->AttachToComponent(m_PlayerCharacter->GetMesh(), rules, TEXT("S_Unequip"));
 	}
 }
+
+void UCharacterAnimInstance::AnimNotify_OnCollision_Start()
+{
+	if (IsValid(m_PlayerCharacter))
+	{
+		m_PlayerCharacter->SetAttackTraceTimer(true);
+	}
+}
+
+void UCharacterAnimInstance::AnimNotify_OnCollision_End()
+{
+	if (IsValid(m_PlayerCharacter))
+	{
+		m_PlayerCharacter->SetAttackTraceTimer(false);
+	}
+}
