@@ -19,7 +19,7 @@ void UHealthHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 	if (!IsValid(m_WidgetOwner))
 		return;
-
+	
 	const float Percent = UKismetMathLibrary::FInterpTo(m_HealthBack->Percent, m_HealthFront->Percent, InDeltaTime, 1.f);
 	m_HealthBack->SetPercent(Percent);
 }

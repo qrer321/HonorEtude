@@ -235,8 +235,6 @@ void AHonorProjectCharacter::MultiCast_Attack_Implementation()
 	if (IsValid(CurrentMontage))
 	{
 		const float AnimLength = CurrentMontage->GetPlayLength();
-		PrintViewport(3.f, FColor::Yellow, FString::Printf(TEXT("AnimLength : %f"), AnimLength));
-	
 		SetControllerYawTimer(AnimLength);
 	}
 }

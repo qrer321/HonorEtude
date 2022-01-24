@@ -82,7 +82,6 @@ float AMasterAICharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dam
 void AMasterAICharacter::MultiCast_CalcDamage_Implementation(float DamageAmount)
 {
 	m_CharacterInfo.HP -= DamageAmount;
-	PrintViewport(3.f, FColor::Yellow, TEXT("Client_CalcDamage 호출"));
 
 	if (IsValid(m_HealthWidget))
 	{
