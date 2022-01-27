@@ -37,15 +37,15 @@ AHonorProjectCharacter::AHonorProjectCharacter()
 	GetCharacterMovement()->AirControl = 0.2f;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
-	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	m_CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	m_CameraBoom->SetupAttachment(RootComponent);
+	m_CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
+	m_CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	// Create a follow camera
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	m_FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	m_FollowCamera->SetupAttachment(m_CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	m_FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 	
 	m_SMSword = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SM_Sword"));
 	m_SMSword->SetIsReplicated(true);
@@ -114,6 +114,8 @@ void AHonorProjectCharacter::BeginPlay()
 void AHonorProjectCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+
+	RotateToTarget();
 }
 
 void AHonorProjectCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -160,7 +162,20 @@ void AHonorProjectCharacter::Server_IsCombatMode_Implementation(bool IsCombatMod
                                                                 FName SectionName)
 {
 	MultiCast_IsCombatMode(IsCombatMode, UseOrientRotation, UseControllerDesiredRotation, MaxWalkSpeed, SectionName);
-	Client_FindClosestEnemy();
+
+	if (true == IsCombatMode)
+	{
+		Client_FindClosestEnemy();
+	}
+	else
+	{
+		if (IsValid(m_ClosestEnemy))
+		{
+			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
+			m_ClosestEnemy = nullptr;
+		}
+	}
+	
 	Client_ReticleVisibility();
 	Server_PlayMontage(m_EquipAnimMontage, 1.f, SectionName);
 }
@@ -279,7 +294,6 @@ void AHonorProjectCharacter::Client_FindClosestEnemy_Implementation()
 
 	m_ClosestEnemy->GetTargetDecal()->SetVisibility(true);
 
-	SetTargetRotateTimer();
 	SetDetectAttackDirectionTimer();
 }
 
@@ -291,33 +305,22 @@ void AHonorProjectCharacter::Client_ReticleVisibility_Implementation()
 		m_CharacterController->GetMainHUD()->SetAttackReticleVisibility(ESlateVisibility::Hidden);
 }
 
-void AHonorProjectCharacter::SetTargetRotateTimer()
-{
-	if (m_IsCombatMode)
-	{
-		GetWorldTimerManager().SetTimer(m_ToTargetRotateTimer, this, &AHonorProjectCharacter::RotateToTarget, 0.01f, true);
-	}
-	else
-	{
-		if (IsValid(m_ClosestEnemy))
-		{
-			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
-			GetWorldTimerManager().ClearTimer(m_ToTargetRotateTimer);
-			
-			m_ClosestEnemy = nullptr;
-		}
-	}
-}
-
 /*
  *	SetActorRotation으로 액터의 회전을 결정하기 위해서는 기본적으로 Replicate 할 필요가 있다.
  *	하지만 SetControlRotation을 사용하면 Replicate 할 필요가 없다.
  *	왜냐하면 컨트롤러의 이동은 UCharacterMovementComponent를 통해 움직임이 복제되기 때문이다.
  */
-void AHonorProjectCharacter::RotateToTarget() const
+void AHonorProjectCharacter::RotateToTarget()
 {
-	if (!IsValid(m_ClosestEnemy))
+	if (false == IsCombatMode())
+	{
 		return;
+	}
+
+	if (false == IsValid(m_ClosestEnemy))
+	{
+		return;
+	}
 
 	const FRotator CurrentRotation = GetActorRotation();
 	const FVector CurrentLocation = GetActorLocation();
@@ -327,12 +330,33 @@ void AHonorProjectCharacter::RotateToTarget() const
 	// FindLookAtRotation 함수를 사용하여 회전값을 알아낸다.
 	// Actor의 회전에서는 Yaw값만이 필요함으로 Yaw(Z) 값만 추출해서 사용한다.
 	const float ToTargetYaw = UKismetMathLibrary::FindLookAtRotation(CurrentLocation, TargetLocation).Yaw;
-	const FRotator ToTargetRotation = { CurrentRotation.Pitch, ToTargetYaw, CurrentRotation.Roll };
+	const FRotator ToTargetRotation = {CurrentRotation.Pitch, ToTargetYaw, CurrentRotation.Roll};
 
 	// 현재 Actor의 회전 값에서 Target을 바라볼 회전값의 차를 보간한다
-	const FRotator DesiredRotation = UKismetMathLibrary::RInterpTo(CurrentRotation, ToTargetRotation, GetWorld()->GetDeltaSeconds(), 5.f);
+	const FRotator DesiredRotation = UKismetMathLibrary::RInterpTo(CurrentRotation, ToTargetRotation,
+	                                                               GetWorld()->GetDeltaSeconds(), 5.f);
 
 	GetController()->SetControlRotation(DesiredRotation);
+}
+
+void AHonorProjectCharacter::CombatCameraSwitch()
+{
+	FVector CameraBoomTargetOffset = {};
+	FVector CameraBoomSocketOffset = {};
+	FVector CameraBoomRelativeLocation = {};
+	FVector FollowCameraRelativeRotation = {};
+	
+	if (m_IsCombatMode)
+	{
+		
+	}
+	else
+	{
+		
+	}
+
+	//m_CameraBoom->TargetOffset;
+	//m_CameraBoom->SetRelativeLocation();
 }
 
 void AHonorProjectCharacter::SetDetectAttackDirectionTimer()
@@ -342,7 +366,7 @@ void AHonorProjectCharacter::SetDetectAttackDirectionTimer()
 	
 	if (m_IsCombatMode)
 	{
-		GetWorldTimerManager().SetTimer(m_DetectAttackDirectionTimer, this, &AHonorProjectCharacter::DetectAttackDirection, 0.01f, true);
+		GetWorldTimerManager().SetTimer(m_DetectAttackDirectionTimer, this, &AHonorProjectCharacter::DetectAttackDirection, 0.1f, true);
 	}
 	else
 	{
@@ -364,7 +388,10 @@ void AHonorProjectCharacter::SetDetectAttackDirectionTimer()
 void AHonorProjectCharacter::DetectAttackDirection()
 {
 	if (!IsValid(m_CharacterController))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Character Controller Is Not Valid"));
 		return;
+	}
 	
 	float TurnValue = 0.f, UpValue = 0.f;
 	m_CharacterController->GetInputMouseDelta(TurnValue, UpValue);
@@ -409,7 +436,6 @@ void AHonorProjectCharacter::SetAttackTraceTimer(bool SetTimer)
 		GetWorldTimerManager().ClearTimer(m_AttackTraceTimer);
 		m_AlreadyDamagedEnemyArray.Empty();
 	}
-	
 }
 
 void AHonorProjectCharacter::AttackTrace()

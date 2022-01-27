@@ -15,10 +15,10 @@ class AHonorProjectCharacter : public AAllCharacter
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* CameraBoom;
+	USpringArmComponent* m_CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* FollowCamera;
+	UCameraComponent* m_FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* m_SMSword;
@@ -66,7 +66,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	EAttackDirection m_AttackDirection;
 
-	FTimerHandle m_ToTargetRotateTimer;
 	FTimerHandle m_DetectAttackDirectionTimer;
 	FTimerHandle m_ControllerYawTimer;
 	FTimerHandle m_AttackTraceTimer;
@@ -115,9 +114,9 @@ public:
 	EAttackDirection GetAttackDirection() const { return m_AttackDirection; }
 
 public:
-	void SetTargetRotateTimer();	
-	void RotateToTarget() const;
-
+	void RotateToTarget();
+	void CombatCameraSwitch();
+	
 	void SetDetectAttackDirectionTimer();
 	void DetectAttackDirection();
 
@@ -142,6 +141,6 @@ protected:
 	void LookUpAtRate(float Rate);
 
 public:
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return m_CameraBoom; }
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return m_FollowCamera; }
 };
