@@ -16,7 +16,7 @@
 AHonorProjectCharacter::AHonorProjectCharacter()
 {
 	bReplicates = true;
-	
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -79,6 +79,14 @@ void AHonorProjectCharacter::BeginPlay()
 	m_CharacterController = Cast<ACharacterController>(GetController());
 	m_AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 	m_AttackDirection = EAttackDirection::None;
+
+	if (IsValid(m_CharacterController))
+	{
+		if (IsValid(m_CharacterController->GetPawn()))
+		{
+			m_CharacterController->GetPawn()->SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		}
+	}
 
 	const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
 	m_SMSword->AttachToComponent(GetMesh(), rules, TEXT("S_Unequip"));
