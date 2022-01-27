@@ -55,11 +55,18 @@ public:
 
 private:
 	UPROPERTY()
-	UDataTable* m_CharacterInfoTable;
+	UDataTable*			m_CharacterInfoTable;
+
+	ISocketSubsystem*	m_SocketSubsystem;
+	FSocket*			m_ClientSocket;
 
 public:
 	virtual void Init() override;
-
-public:
+	virtual void BeginDestroy() override;
 	const FCharacterTableInfo* FindCharacterInfo(const FString& Name) const;
+	
+public:
+	bool ClientThreadCheck();
+	bool ServerConnect(const FString& IPString, const FString& PortString);
+	void CloseConnect();
 };

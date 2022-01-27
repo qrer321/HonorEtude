@@ -105,6 +105,7 @@ public:
 	void Client_ReticleVisibility();
 
 public:
+	UFUNCTION(BlueprintCallable)
 	bool IsCombatMode() const { return m_IsCombatMode; }
 
 	UFUNCTION(BlueprintCallable)
