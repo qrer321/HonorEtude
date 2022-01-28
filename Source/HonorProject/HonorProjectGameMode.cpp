@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "HonorProjectGameMode.h"
-#include "Character/HonorProjectCharacter.h"
+#include "Character/PlayerCharacter.h"
 #include "Character/CharacterController.h"
 
 AHonorProjectGameMode::AHonorProjectGameMode()

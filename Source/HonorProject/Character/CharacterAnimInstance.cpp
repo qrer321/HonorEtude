@@ -2,7 +2,7 @@
 
 
 #include "CharacterAnimInstance.h"
-#include "HonorProjectCharacter.h"
+#include "PlayerCharacter.h"
 
 UCharacterAnimInstance::UCharacterAnimInstance()
 {
@@ -19,7 +19,7 @@ void UCharacterAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
 
-	AHonorProjectCharacter* PlayerCharacter = Cast<AHonorProjectCharacter>(TryGetPawnOwner());
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(TryGetPawnOwner());
 	if (IsValid(PlayerCharacter))
 		m_PlayerCharacter = PlayerCharacter;
 }

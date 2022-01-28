@@ -20,11 +20,11 @@ private:
 	UProgressBar* m_HealthBack;
 
 	UPROPERTY()
-	class AAllCharacter* m_WidgetOwner;
+	class AHonorProjectCharacter* m_WidgetOwner;
 
 public:
 	void SetHPPercent(const float Percent) const { m_HealthFront->SetPercent(Percent); }
-	void SetWidgetOwner(AAllCharacter* WidgetOwner) { m_WidgetOwner = WidgetOwner; }
+	void SetWidgetOwner(AHonorProjectCharacter* WidgetOwner) { m_WidgetOwner = WidgetOwner; }
 
 protected:
 	virtual void NativeConstruct() override;

@@ -16,7 +16,7 @@ public:
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	class AHonorProjectCharacter* m_PlayerCharacter;
+	class APlayerCharacter* m_PlayerCharacter;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool m_IsinAir;
