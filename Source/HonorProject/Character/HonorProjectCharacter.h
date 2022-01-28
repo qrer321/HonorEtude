@@ -13,13 +13,23 @@ UCLASS(config=Game)
 class AHonorProjectCharacter : public AAllCharacter
 {
 	GENERATED_BODY()
+	
+public:
+	AHonorProjectCharacter();
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	USpringArmComponent* m_CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* CameraBoom;
+	UCameraComponent* m_FollowCamera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* FollowCamera;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
+	float BaseTurnRate;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
+	float BaseLookUpRate;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* m_SMSword;
 
@@ -42,31 +52,20 @@ class AHonorProjectCharacter : public AAllCharacter
 	UAnimMontage* m_AttackRightMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
+	bool m_IsCombatMode;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	class AMasterAICharacter* m_ClosestEnemy;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
-	TArray<AMasterAICharacter*> m_AlreadyDamagedEnemyArray;
-	
-public:
-	AHonorProjectCharacter();
-
-protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-	float BaseTurnRate;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-	float BaseLookUpRate;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
-	bool m_IsCombatMode;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	float m_ClosestEnemyDistance;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
+	TArray<AMasterAICharacter*> m_AlreadyDamagedEnemyArray;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
 	EAttackDirection m_AttackDirection;
 
-	FTimerHandle m_ToTargetRotateTimer;
 	FTimerHandle m_DetectAttackDirectionTimer;
 	FTimerHandle m_ControllerYawTimer;
 	FTimerHandle m_AttackTraceTimer;
@@ -115,16 +114,15 @@ public:
 	EAttackDirection GetAttackDirection() const { return m_AttackDirection; }
 
 public:
-	void SetTargetRotateTimer();	
-	void RotateToTarget() const;
-
+	void RotateToTarget();
+	void CombatCameraSwitch();
+	
 	void SetDetectAttackDirectionTimer();
-	void DetectAttackDirection();
-
 	void SetControllerYawTimer(float AnimMontageLength);
-	void ResetControllerYaw();
-
 	void SetAttackTraceTimer(bool SetTimer);
+	
+	void DetectAttackDirection();
+	void ResetControllerYaw();
 	void AttackTrace();
 
 protected:
@@ -142,6 +140,6 @@ protected:
 	void LookUpAtRate(float Rate);
 
 public:
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return m_CameraBoom; }
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return m_FollowCamera; }
 };

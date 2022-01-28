@@ -44,6 +44,20 @@ public:
 	float MoveSpeed;
 };
 
+class ClientRecvThread : public FRunnable
+{
+public:
+	ClientRecvThread(FSocket* RecvSocket);
+
+private:
+	FSocket* m_RecvSocket;
+
+public:
+	virtual uint32 Run() override;
+	virtual void Stop() override;
+	virtual void Exit() override;
+};
+
 UCLASS()
 class HONORPROJECT_API UHonorProjectGameInstance : public UGameInstance
 {
@@ -54,11 +68,15 @@ public:
 	virtual ~UHonorProjectGameInstance() override;
 
 private:
-	UPROPERTY()
-	UDataTable*			m_CharacterInfoTable;
+	ClientRecvThread*	m_RecvThread;
+	FRunnableThread*	m_RunnableThread;
 
 	ISocketSubsystem*	m_SocketSubsystem;
 	FSocket*			m_ClientSocket;
+
+private:
+	UPROPERTY()
+	UDataTable*			m_CharacterInfoTable;
 
 public:
 	virtual void Init() override;
@@ -69,4 +87,6 @@ public:
 	bool ClientThreadCheck();
 	bool ServerConnect(const FString& IPString, const FString& PortString);
 	void CloseConnect();
+
+	bool Send(const TArray<uint8>& Data);
 };

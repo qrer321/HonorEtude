@@ -7,6 +7,48 @@
 #include "Interfaces/IPv4/IPv4Address.h"
 #include "Interfaces/IPv4/IPv4Endpoint.h"
 
+ClientRecvThread::ClientRecvThread(FSocket* RecvSocket)
+{
+	if (nullptr == RecvSocket)
+	{
+		UE_LOG(LogTemp, Error, TEXT("RecvSocket Error"));
+	}
+
+	m_RecvSocket = RecvSocket;
+}
+
+uint32 ClientRecvThread::Run()
+{
+	UE_LOG(LogTemp, Log, TEXT("Recv Start"));
+
+	while (true)
+	{
+		TArray<uint8> RecvData;
+		RecvData.SetNum(1024);
+		
+		int32 RecvDataSize = 0;
+		if (false == m_RecvSocket->Recv(RecvData.GetData(), RecvData.Num(), RecvDataSize))
+		{
+			break;
+		}
+
+		FString Text = FString(UTF8_TO_TCHAR(RecvData.GetData()));
+		UE_LOG(LogTemp, Log, TEXT("%s"), *Text);
+	}
+
+	return 0;
+}
+
+void ClientRecvThread::Stop()
+{
+	FRunnable::Stop();
+}
+
+void ClientRecvThread::Exit()
+{
+	FRunnable::Exit();
+}
+
 UHonorProjectGameInstance::UHonorProjectGameInstance()
 {
 	static ConstructorHelpers::FObjectFinder<UDataTable> CharacterTableAsset(TEXT("DataTable'/Game/HonorProejct/Character/Data/DTCharacterInfo.DTCharacterInfo'"));
@@ -85,6 +127,9 @@ bool UHonorProjectGameInstance::ServerConnect(const FString& IPString, const FSt
 		m_ClientSocket = nullptr;
 		return false;
 	}
+
+	m_RecvThread = new ClientRecvThread(m_ClientSocket);
+	m_RunnableThread = FRunnableThread::Create(m_RecvThread, TEXT("Recv Thread"));
 	
 	return true;
 }
@@ -96,4 +141,13 @@ void UHonorProjectGameInstance::CloseConnect()
 
 	m_ClientSocket->Close();
 	m_ClientSocket = nullptr;
+}
+
+bool UHonorProjectGameInstance::Send(const TArray<uint8>& Data)
+{
+	if (0 == Data.Num())
+		return false;
+
+	int32 DataSendSize = 0;
+	return m_ClientSocket->Send(Data.GetData(), Data.Num(), DataSendSize);
 }
