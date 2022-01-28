@@ -1,5 +1,5 @@
 # HonorProject
-https://outrageous-trunk-104.notion.site/KATANA-HONOR-ETUDE-aacb81cdee91471d8acd02a540f9dbbd
+https://hbbh.notion.site/KATANA-HONOR-ETUDE-aacb81cdee91471d8acd02a540f9dbbd
 
 홍상범
 qrer321@naver.com
