@@ -116,6 +116,7 @@ void AHonorProjectCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	RotateToTarget();
+	CombatCameraSwitch();
 }
 
 void AHonorProjectCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -330,33 +331,62 @@ void AHonorProjectCharacter::RotateToTarget()
 	// FindLookAtRotation 함수를 사용하여 회전값을 알아낸다.
 	// Actor의 회전에서는 Yaw값만이 필요함으로 Yaw(Z) 값만 추출해서 사용한다.
 	const float ToTargetYaw = UKismetMathLibrary::FindLookAtRotation(CurrentLocation, TargetLocation).Yaw;
-	const FRotator ToTargetRotation = {CurrentRotation.Pitch, ToTargetYaw, CurrentRotation.Roll};
+	const FRotator ToTargetRotation = { CurrentRotation.Pitch, ToTargetYaw, CurrentRotation.Roll };
 
 	// 현재 Actor의 회전 값에서 Target을 바라볼 회전값의 차를 보간한다
-	const FRotator DesiredRotation = UKismetMathLibrary::RInterpTo(CurrentRotation, ToTargetRotation,
-	                                                               GetWorld()->GetDeltaSeconds(), 5.f);
+	const FRotator DesiredRotation = UKismetMathLibrary::RInterpTo(CurrentRotation, ToTargetRotation, GetWorld()->GetDeltaSeconds(), 5.f);
 
 	GetController()->SetControlRotation(DesiredRotation);
 }
 
 void AHonorProjectCharacter::CombatCameraSwitch()
 {
-	FVector CameraBoomTargetOffset = {};
-	FVector CameraBoomSocketOffset = {};
-	FVector CameraBoomRelativeLocation = {};
-	FVector FollowCameraRelativeRotation = {};
+	FVector CameraBoomTargetOffset = m_CameraBoom->TargetOffset;
+	FVector CameraBoomSocketOffset = m_CameraBoom->SocketOffset;
+	float CameraBoomTargetArmLength = m_CameraBoom->TargetArmLength;
+	FVector CameraBoomRelativeLocation = m_CameraBoom->GetRelativeLocation();
+	FRotator FollowCameraRelativeRotation = m_FollowCamera->GetRelativeRotation();
 	
 	if (m_IsCombatMode)
 	{
+		CameraBoomTargetOffset = FMath::VInterpTo(CameraBoomTargetOffset, {0.f, 0.f, 30.f},
+		                                          GetWorld()->GetDeltaSeconds(), 5.f);
+
+		CameraBoomSocketOffset = FMath::VInterpTo(CameraBoomSocketOffset, {0.f, 100.f, 0.f},
+		                                          GetWorld()->GetDeltaSeconds(), 5.f);
+
+		CameraBoomTargetArmLength = FMath::FInterpTo(CameraBoomTargetArmLength, 200.f, GetWorld()->GetDeltaSeconds(),
+													 5.f);
 		
+		CameraBoomRelativeLocation = FMath::VInterpTo(CameraBoomRelativeLocation, {0.f, 0.f, 30.f},
+													  GetWorld()->GetDeltaSeconds(), 5.f);
+
+		FollowCameraRelativeRotation = FMath::RInterpTo(FollowCameraRelativeRotation, {0.f, -10.f, 0.f},
+		                                                GetWorld()->GetDeltaSeconds(), 5.f);
 	}
 	else
 	{
+		CameraBoomTargetOffset = FMath::VInterpTo(CameraBoomTargetOffset, {0.f, 0.f, 150.f},
+		                                          GetWorld()->GetDeltaSeconds(), 5.f);
+
+		CameraBoomSocketOffset = FMath::VInterpTo(CameraBoomSocketOffset, {0.f, 0.f, 0.f},
+		                                          GetWorld()->GetDeltaSeconds(), 5.f);
+
+		CameraBoomTargetArmLength = FMath::FInterpTo(CameraBoomTargetArmLength, 300.f, GetWorld()->GetDeltaSeconds(),
+															 5.f);
 		
+		CameraBoomRelativeLocation = FMath::VInterpTo(CameraBoomRelativeLocation, {0.f, 0.f, 80.f},
+		                                              GetWorld()->GetDeltaSeconds(), 5.f);
+
+		FollowCameraRelativeRotation = FMath::RInterpTo(FollowCameraRelativeRotation, {-30.f, 0.f, 0.f},
+														GetWorld()->GetDeltaSeconds(), 5.f);
 	}
 
-	//m_CameraBoom->TargetOffset;
-	//m_CameraBoom->SetRelativeLocation();
+	m_CameraBoom->TargetOffset = CameraBoomTargetOffset;
+	m_CameraBoom->SocketOffset = CameraBoomSocketOffset;
+	m_CameraBoom->TargetArmLength = CameraBoomTargetArmLength;
+	m_CameraBoom->SetRelativeLocation(CameraBoomRelativeLocation);
+	m_FollowCamera->SetRelativeRotation(FollowCameraRelativeRotation);
 }
 
 void AHonorProjectCharacter::SetDetectAttackDirectionTimer()
@@ -378,6 +408,25 @@ void AHonorProjectCharacter::SetDetectAttackDirectionTimer()
 			MainHUD->SetAttackReticleOpacity(m_AttackDirection);
 		
 		GetWorldTimerManager().ClearTimer(m_DetectAttackDirectionTimer);
+	}
+}
+
+void AHonorProjectCharacter::SetControllerYawTimer(float AnimMontageLength)
+{
+	GetWorldTimerManager().SetTimer(m_ControllerYawTimer, this, &AHonorProjectCharacter::ResetControllerYaw, AnimMontageLength, false);
+}
+
+void AHonorProjectCharacter::SetAttackTraceTimer(bool SetTimer)
+{
+	if (SetTimer)
+	{
+		if (!GetWorldTimerManager().TimerExists(m_AttackTraceTimer))
+			GetWorldTimerManager().SetTimer(m_AttackTraceTimer, this, &AHonorProjectCharacter::AttackTrace, 0.01f, true);		
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(m_AttackTraceTimer);
+		m_AlreadyDamagedEnemyArray.Empty();
 	}
 }
 
@@ -414,28 +463,9 @@ void AHonorProjectCharacter::DetectAttackDirection()
 	}
 }
 
-void AHonorProjectCharacter::SetControllerYawTimer(float AnimMontageLength)
-{
-	GetWorldTimerManager().SetTimer(m_ControllerYawTimer, this, &AHonorProjectCharacter::ResetControllerYaw, AnimMontageLength, false);
-}
-
 void AHonorProjectCharacter::ResetControllerYaw()
 {
 	bUseControllerRotationYaw = false;
-}
-
-void AHonorProjectCharacter::SetAttackTraceTimer(bool SetTimer)
-{
-	if (SetTimer)
-	{
-		if (!GetWorldTimerManager().TimerExists(m_AttackTraceTimer))
-			GetWorldTimerManager().SetTimer(m_AttackTraceTimer, this, &AHonorProjectCharacter::AttackTrace, 0.01f, true);		
-	}
-	else
-	{
-		GetWorldTimerManager().ClearTimer(m_AttackTraceTimer);
-		m_AlreadyDamagedEnemyArray.Empty();
-	}
 }
 
 void AHonorProjectCharacter::AttackTrace()

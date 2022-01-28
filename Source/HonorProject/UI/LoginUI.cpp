@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+#include <string>
 #include "LoginUI.h"
-
 #include "HonorProject/HonorProjectGameInstance.h"
 
 void ULoginUI::ResetInfo()
@@ -21,4 +21,16 @@ void ULoginUI::ServerConnect()
 
 void ULoginUI::ServerLogin()
 {
+	FString StringTest = TEXT("한글 데이터 테스트");
+	ANSICHAR* AnsiPtr = TCHAR_TO_UTF8(*StringTest);
+	std::string SendString = std::string(AnsiPtr); 
+	
+	TArray<uint8> Data;
+	Data.SetNum(SendString.size() + 1);
+	Data[SendString.size()] = 0;
+	std::copy(SendString.begin(), SendString.end(), Data.GetData());
+
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+	if (GameInstance->Send(Data))
+		return;
 }

@@ -12,7 +12,7 @@ class HONORPROJECT_API AAllCharacter : public ACharacter
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CharacterInfo, meta = (AllowPrivateAccess = "true"), Replicated)
 	FCharacterInfo m_CharacterInfo;
 
 public:
