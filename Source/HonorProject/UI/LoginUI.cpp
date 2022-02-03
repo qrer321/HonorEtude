@@ -1,8 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "LoginUI.h"
-#include <string>
 #include "HonorProject/HonorProjectGameInstance.h"
+#include "../Global/ClientBlueprintFunctionLibrary.h"
+#include "../Global/GameServerPacket.h"
 
 void ULoginUI::ResetInfo()
 {
@@ -15,21 +16,29 @@ void ULoginUI::ServerConnect()
 	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
 	
 	if (false == GameInstance->ServerConnect(m_IPString, m_PortString))
+	{
+		m_ConnectStatus = TEXT("접속 실패");
 		return;
+	}
+
+	m_ConnectStatus = TEXT("접속 성공");
 }
 
 void ULoginUI::ServerLogin()
 {
-	FString StringTest = TEXT("한글 데이터 테스트");
-	ANSICHAR* AnsiPtr = TCHAR_TO_UTF8(*StringTest);
-	std::string SendString = std::string(AnsiPtr); 
-	
-	TArray<uint8> Data;
-	Data.SetNum(SendString.size() + 1);
-	Data[SendString.size()] = 0;
-	std::copy(SendString.begin(), SendString.end(), Data.GetData());
-
 	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
-	if (GameInstance->Send(Data))
-		return;
+
+	std::string ID;
+	std::string PW;
+	UClientBlueprintFunctionLibrary::FStringToUTF8(m_IDString, ID);
+	UClientBlueprintFunctionLibrary::FStringToUTF8(m_PWString, PW);
+
+	LoginPacket NewPacket;
+	NewPacket.m_ID = ID;
+	NewPacket.m_PW = PW;
+
+	GameServerSerializer Serializer;
+	NewPacket.Serialize(Serializer);
+
+	GameInstance->Send(Serializer.GetData());
 }
