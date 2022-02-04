@@ -2,8 +2,7 @@
 
 
 #include "HealthHUD.h"
-#include "../Character/AllCharacter.h"
-#include "HonorProject/Character/AllCharacter.h"
+#include "../Character/HonorProjectCharacter.h"
 
 void UHealthHUD::NativeConstruct()
 {

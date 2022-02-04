@@ -3,13 +3,13 @@
 #pragma once
 
 #include "../GameInfo.h"
-#include "AllCharacter.h"
+#include "HonorProjectCharacter.h"
 #include "GameFramework/Character.h"
 #include "Components/WidgetComponent.h"
 #include "MasterAICharacter.generated.h"
 
 UCLASS()
-class HONORPROJECT_API AMasterAICharacter : public AAllCharacter
+class HONORPROJECT_API AMasterAICharacter : public AHonorProjectCharacter
 {
 	GENERATED_BODY()
 
