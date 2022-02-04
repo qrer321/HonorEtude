@@ -1,12 +1,15 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "GameServerSerializer.h"
 
 GameServerSerializer::GameServerSerializer()
 	: m_Offset(0)
 {
 	m_Data.SetNum(1024);
+}
+
+GameServerSerializer::GameServerSerializer(const TArray<uint8>& Data)
+	: m_Offset(0)
+	, m_Data(Data)
+{
 }
 
 void GameServerSerializer::Read(void* Data, unsigned int Size)
@@ -24,7 +27,7 @@ void GameServerSerializer::Write(const void* Data, unsigned int Size)
 void GameServerSerializer::operator<<(const std::string& Value)
 {
 	operator<<(static_cast<int>(Value.size()));
-	Write(reinterpret_cast<const void*>(&Value[0]), Value.size());
+	Write(reinterpret_cast<const void*>(&Value[0]), static_cast<unsigned int>(Value.size()));
 }
 
 void GameServerSerializer::operator<<(const int Value)
@@ -39,10 +42,10 @@ void GameServerSerializer::operator<<(const unsigned int Value)
 
 void GameServerSerializer::operator>>(std::string& Value)
 {
-	int Size;
-	operator>>(Size);
-	Value.resize(Size);
-	Read(&Value[0], Size);
+	int size;
+	operator>>(size);
+	Value.resize(size);
+	Read(&Value[0], size);
 }
 
 void GameServerSerializer::operator>>(int& Value)
@@ -54,5 +57,3 @@ void GameServerSerializer::operator>>(unsigned int& Value)
 {
 	Read(&Value, sizeof(unsigned int));
 }
-
-
