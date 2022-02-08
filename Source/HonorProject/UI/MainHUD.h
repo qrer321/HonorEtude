@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../GameInfo.h"
+#include "../Global/GameInfo.h"
 #include "Blueprint/UserWidget.h"
 #include "AttackReticleHUD.h"
 #include "MainHUD.generated.h"

@@ -2,4 +2,4 @@
 
 #pragma once
 
-#include "GameInfo.h"
+#include "Global/GameInfo.h"

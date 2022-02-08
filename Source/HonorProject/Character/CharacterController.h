@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../GameInfo.h"
+#include "../Global/GameInfo.h"
 #include "GameFramework/PlayerController.h"
 #include "../UI/MainHUD.h"
 #include "CharacterController.generated.h"

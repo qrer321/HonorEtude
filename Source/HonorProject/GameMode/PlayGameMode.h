@@ -4,16 +4,13 @@
 
 #include "../Global/GameInfo.h"
 #include "GameFramework/GameMode.h"
-#include "LoginGameMode.generated.h"
+#include "PlayGameMode.generated.h"
 
 UCLASS()
-class HONORPROJECT_API ALoginGameMode : public AGameMode
+class HONORPROJECT_API APlayGameMode : public AGameMode
 {
 	GENERATED_BODY()
 
 public:
-	ALoginGameMode();
-
-public:
-	virtual void Tick(float DeltaSeconds) override;
+	APlayGameMode();
 };

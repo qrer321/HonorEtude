@@ -1,5 +1,5 @@
 #pragma once
-#include "../GameInfo.h"
+#include "../Global/GameInfo.h"
 #include <functional>
 #include <memory>
 

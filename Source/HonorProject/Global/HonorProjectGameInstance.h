@@ -6,7 +6,7 @@
 
 #include "GameInfo.h"
 #include "Engine/GameInstance.h"
-#include "Message/Messages.h"
+#include "../Message/Messages.h"
 #include "HonorProjectGameInstance.generated.h"
 
 USTRUCT(BlueprintType)

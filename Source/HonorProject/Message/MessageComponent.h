@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../GameInfo.h"
+#include "../Global/GameInfo.h"
 #include "Components/ActorComponent.h"
 #include "Dispatcher.h"
 #include "MessageComponent.generated.h"

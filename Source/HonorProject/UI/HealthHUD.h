@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../GameInfo.h"
+#include "../Global/GameInfo.h"
 #include "Components/ProgressBar.h"
 #include "Blueprint/UserWidget.h"
 #include "HealthHUD.generated.h"

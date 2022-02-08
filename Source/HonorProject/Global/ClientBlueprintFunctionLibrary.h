@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../GameInfo.h"
+#include "../Global/GameInfo.h"
 #include <string>
 #include <vector>
 #include "Kismet/BlueprintFunctionLibrary.h"

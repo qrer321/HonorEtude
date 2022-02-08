@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "LoginUI.h"
-#include "HonorProject/HonorProjectGameInstance.h"
+#include "HonorProject/Global/HonorProjectGameInstance.h"
 #include "../Global/ClientBlueprintFunctionLibrary.h"
 #include "../Message/Messages.h"
 

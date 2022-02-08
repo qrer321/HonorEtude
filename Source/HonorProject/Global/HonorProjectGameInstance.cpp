@@ -7,7 +7,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Interfaces/IPv4/IPv4Address.h"
 #include "Interfaces/IPv4/IPv4Endpoint.h"
-#include "Message/MessageConverter.h"
+#include "../Message/MessageConverter.h"
 
 ClientRecvThread::ClientRecvThread(FSocket* RecvSocket, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue)
 {
@@ -59,7 +59,7 @@ void ClientRecvThread::Exit()
 
 UHonorProjectGameInstance::UHonorProjectGameInstance()
 {
-	static ConstructorHelpers::FObjectFinder<UDataTable> CharacterTableAsset(TEXT("DataTable'/Game/HonorProejct/Character/Data/DTCharacterInfo.DTCharacterInfo'"));
+	static ConstructorHelpers::FObjectFinder<UDataTable> CharacterTableAsset(TEXT("DataTable'/Game/HonorProejct/PlayRelevant/Character/Data/DTCharacterInfo.DTCharacterInfo'"));
 	if (CharacterTableAsset.Succeeded())
 		m_CharacterInfoTable = CharacterTableAsset.Object;
 }

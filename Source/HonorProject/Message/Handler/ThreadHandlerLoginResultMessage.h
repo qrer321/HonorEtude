@@ -1,6 +1,6 @@
 ﻿#pragma once
-#include "../../GameInfo.h"
-#include "HonorProject/HonorProjectGameInstance.h"
+#include "../../Global/GameInfo.h"
+#include "HonorProject/Global/HonorProjectGameInstance.h"
 
 class HONORPROJECT_API ThreadHandlerLoginResultMessage
 {

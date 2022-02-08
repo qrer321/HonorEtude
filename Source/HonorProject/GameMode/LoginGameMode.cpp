@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "LoginGameMode.h"
-#include "../HonorProjectGameInstance.h"
+#include "../Global/HonorProjectGameInstance.h"
 
 ALoginGameMode::ALoginGameMode()
 {

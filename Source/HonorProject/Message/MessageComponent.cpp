@@ -2,7 +2,7 @@
 
 #include "MessageComponent.h"
 #include "Handler/HandlerHeader.h"
-#include "../HonorProjectGameInstance.h"
+#include "../Global/HonorProjectGameInstance.h"
 
 template <typename MessageHandler, typename MessageType>
 void OnMessageProcess(std::shared_ptr<GameServerMessage> Message, UHonorProjectGameInstance* GameInstance, UWorld* World)
