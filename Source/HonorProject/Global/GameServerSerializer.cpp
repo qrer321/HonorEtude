@@ -12,6 +12,13 @@ GameServerSerializer::GameServerSerializer(const TArray<uint8>& Data)
 {
 }
 
+GameServerSerializer::GameServerSerializer(GameServerSerializer&& Other) noexcept
+	: m_Offset(Other.m_Offset)
+	, m_Data(MoveTempIfPossible(Other.m_Data))
+{
+	
+}
+
 void GameServerSerializer::Read(void* Data, unsigned int Size)
 {
 	memcpy_s(Data, Size, &m_Data[m_Offset], Size);

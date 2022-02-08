@@ -33,12 +33,12 @@ void ULoginUI::ServerLogin()
 	UClientBlueprintFunctionLibrary::FStringToUTF8(m_IDString, ID);
 	UClientBlueprintFunctionLibrary::FStringToUTF8(m_PWString, PW);
 
-	LoginPacket NewPacket;
-	NewPacket.m_ID = ID;
-	NewPacket.m_PW = PW;
+	LoginMessage NewMessage;
+	NewMessage.m_ID = ID;
+	NewMessage.m_PW = PW;
 
 	GameServerSerializer Serializer;
-	NewPacket.Serialize(Serializer);
+	NewMessage.Serialize(Serializer);
 
 	GameInstance->Send(Serializer.GetData());
 }

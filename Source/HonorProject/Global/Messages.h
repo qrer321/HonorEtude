@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include "GameServerSerializer.h"
 
 enum class MessageID
@@ -14,7 +15,7 @@ enum class EGameServerCode
 	MAX,
 };
 
-class HONORPROJECT_API GameServerMessage
+class HONORPROJECT_API GameServerMessage : public std::enable_shared_from_this<GameServerMessage>
 {
 private: // Member Var
 	MessageID		m_ID;
@@ -46,22 +47,22 @@ public: // Member Function
 	virtual void Deserialize(GameServerSerializer& Deserializer);
 };
 
-class LoginPacket : public GameServerMessage
+class LoginMessage : public GameServerMessage
 {
 public:
 	std::string m_ID;
 	std::string m_PW;
 
 public:
-	LoginPacket();
-	~LoginPacket() override = default;
+	LoginMessage();
+	~LoginMessage() override = default;
 
-	LoginPacket(const LoginPacket& Other) = delete;
-	LoginPacket(LoginPacket&& Other) noexcept = delete;
+	LoginMessage(const LoginMessage& Other) = delete;
+	LoginMessage(LoginMessage&& Other) noexcept = delete;
 
 public:
-	LoginPacket& operator=(const LoginPacket& Other) = delete;
-	LoginPacket& operator=(LoginPacket&& Other) = delete;
+	LoginMessage& operator=(const LoginMessage& Other) = delete;
+	LoginMessage& operator=(LoginMessage&& Other) = delete;
 
 public:
 	int SizeCheck() override;
@@ -69,21 +70,21 @@ public:
 	void Deserialize(GameServerSerializer& Deserializer) override;
 };
 
-class LoginResultPacket : public GameServerMessage
+class LoginResultMessage : public GameServerMessage
 {
 public:
 	EGameServerCode m_Code;
 
 public:
-	LoginResultPacket();
-	~LoginResultPacket() override = default;
+	LoginResultMessage();
+	~LoginResultMessage() override = default;
 
-	LoginResultPacket(const LoginResultPacket& Other) = delete;
-	LoginResultPacket(LoginResultPacket&& Other) noexcept = delete;
+	LoginResultMessage(const LoginResultMessage& Other) = delete;
+	LoginResultMessage(LoginResultMessage&& Other) noexcept = delete;
 
 public:
-	LoginResultPacket& operator=(const LoginResultPacket& Other) = delete;
-	LoginResultPacket& operator=(LoginResultPacket&& Other) = delete;
+	LoginResultMessage& operator=(const LoginResultMessage& Other) = delete;
+	LoginResultMessage& operator=(LoginResultMessage&& Other) = delete;
 
 public:
 	int SizeCheck() override;

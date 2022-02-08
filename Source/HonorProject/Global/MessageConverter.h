@@ -15,7 +15,7 @@ public: // Default
 	~MessageConverter() = default;
 
 	MessageConverter(const MessageConverter& Other) = delete;
-	MessageConverter(MessageConverter&& Other) noexcept = delete;
+	MessageConverter(MessageConverter&& Other) noexcept;
 
 	MessageConverter& operator=(const MessageConverter& Other) = delete;
 	MessageConverter& operator=(MessageConverter&& Other) = delete;

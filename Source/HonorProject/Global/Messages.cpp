@@ -39,24 +39,24 @@ void GameServerMessage::Deserialize(GameServerSerializer& Deserializer)
 
 
 /////////////////////////////// LoginPacket ///////////////////////////////
-LoginPacket::LoginPacket()
+LoginMessage::LoginMessage()
 	: GameServerMessage(MessageID::Login)
 {
 }
 
-int LoginPacket::SizeCheck()
+int LoginMessage::SizeCheck()
 {
 	return static_cast<int>(DataSizeCheck(m_ID) + DataSizeCheck(m_PW));
 }
 
-void LoginPacket::Serialize(GameServerSerializer& serializer)
+void LoginMessage::Serialize(GameServerSerializer& serializer)
 {
 	GameServerMessage::Serialize(serializer);
 	serializer << m_ID;
 	serializer << m_PW;
 }
 
-void LoginPacket::Deserialize(GameServerSerializer& deserializer)
+void LoginMessage::Deserialize(GameServerSerializer& deserializer)
 {
 	GameServerMessage::Deserialize(deserializer);
 	deserializer >> m_ID;
@@ -65,24 +65,24 @@ void LoginPacket::Deserialize(GameServerSerializer& deserializer)
 
 
 /////////////////////////////// LoginResultPacket ///////////////////////////////
-LoginResultPacket::LoginResultPacket()
+LoginResultMessage::LoginResultMessage()
 	: GameServerMessage(MessageID::LoginResult)
 	, m_Code(EGameServerCode::MAX)
 {
 }
 
-int LoginResultPacket::SizeCheck()
+int LoginResultMessage::SizeCheck()
 {
 	return static_cast<int>(DataSizeCheck(m_Code));
 }
 
-void LoginResultPacket::Serialize(GameServerSerializer& Serializer)
+void LoginResultMessage::Serialize(GameServerSerializer& Serializer)
 {
 	GameServerMessage::Serialize(Serializer);
 	Serializer << static_cast<int>(m_Code);
 }
 
-void LoginResultPacket::Deserialize(GameServerSerializer& Deserializer)
+void LoginResultMessage::Deserialize(GameServerSerializer& Deserializer)
 {
 	GameServerMessage::Deserialize(Deserializer);
 

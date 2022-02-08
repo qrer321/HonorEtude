@@ -2,8 +2,11 @@
 
 #pragma once
 
+#include <memory>
+
 #include "GameInfo.h"
 #include "Engine/GameInstance.h"
+#include "Global/Messages.h"
 #include "HonorProjectGameInstance.generated.h"
 
 USTRUCT(BlueprintType)
@@ -47,10 +50,11 @@ public:
 class ClientRecvThread : public FRunnable
 {
 public:
-	ClientRecvThread(FSocket* RecvSocket);
+	ClientRecvThread(FSocket* RecvSocket, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue);
 
 private:
 	FSocket* m_RecvSocket;
+	TQueue<std::shared_ptr<GameServerMessage>>* m_MessageQueue;
 
 public:
 	virtual uint32 Run() override;
@@ -74,6 +78,8 @@ private:
 	ISocketSubsystem*	m_SocketSubsystem;
 	FSocket*			m_ClientSocket;
 
+	TQueue<std::shared_ptr<GameServerMessage>> m_MessageQueue;
+
 private:
 	UPROPERTY()
 	UDataTable*			m_CharacterInfoTable;
@@ -82,6 +88,9 @@ public:
 	virtual void Init() override;
 	virtual void BeginDestroy() override;
 	const FCharacterTableInfo* FindCharacterInfo(const FString& Name) const;
+
+public:
+	const TQueue<std::shared_ptr<GameServerMessage>>& GetMessageQueue() { return m_MessageQueue; }
 	
 public:
 	bool ClientThreadCheck();

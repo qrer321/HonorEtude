@@ -1,4 +1,5 @@
 #include "MessageConverter.h"
+#include "GameServerSerializer.h"
 
 MessageConverter::MessageConverter(const TArray<uint8>& Buffer)
 	: m_Buffer(Buffer)
@@ -11,16 +12,22 @@ MessageConverter::MessageConverter(const TArray<uint8>& Buffer)
 	switch (ID)
 	{
 	case MessageID::Login:
-		Packet = std::make_shared<LoginPacket>();
+		Packet = std::make_shared<LoginMessage>();
 		break;
 	case MessageID::LoginResult:
-		Packet = std::make_shared<LoginResultPacket>();
+		Packet = std::make_shared<LoginResultMessage>();
 		break;
 	default:
 		break;
 	}
 
 	Packet->Deserialize(Serializer);
+}
+
+MessageConverter::MessageConverter(MessageConverter&& Other) noexcept
+	: m_Buffer(std::move(Other.m_Buffer))
+	, m_Message(MoveTempIfPossible(Other.m_Message))
+{
 }
 
 MessageID MessageConverter::GetMessageID() const

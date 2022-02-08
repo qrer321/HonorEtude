@@ -13,11 +13,11 @@ public:
 	explicit GameServerSerializer(const TArray<uint8>& Data);
 	~GameServerSerializer() = default;
 
-	//GameServerSerializer(const GameServerSerializer& other) = delete;
-	//GameServerSerializer(GameServerSerializer&& other) noexcept = delete;
+	GameServerSerializer(const GameServerSerializer& Other) = delete;
+	GameServerSerializer(GameServerSerializer&& Other) noexcept;
 
-	//GameServerSerializer& operator=(const GameServerSerializer& other) = delete;
-	//GameServerSerializer& operator=(GameServerSerializer&& other) = delete;
+	GameServerSerializer& operator=(const GameServerSerializer& Other) = delete;
+	GameServerSerializer& operator=(GameServerSerializer&& Other) = delete;
 
 public:
 	void operator<<(const std::string& Value);

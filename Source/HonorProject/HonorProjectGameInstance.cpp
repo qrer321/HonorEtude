@@ -6,15 +6,22 @@
 #include "SocketSubsystem.h"
 #include "Interfaces/IPv4/IPv4Address.h"
 #include "Interfaces/IPv4/IPv4Endpoint.h"
+#include "Global/MessageConverter.h"
 
-ClientRecvThread::ClientRecvThread(FSocket* RecvSocket)
+ClientRecvThread::ClientRecvThread(FSocket* RecvSocket, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue)
 {
 	if (nullptr == RecvSocket)
 	{
 		UE_LOG(LogTemp, Error, TEXT("RecvSocket Error"));
 	}
 
+	if (nullptr == MessageQueue)
+	{
+		UE_LOG(LogTemp, Error, TEXT("MessageQueue Error"));
+	}
+
 	m_RecvSocket = RecvSocket;
+	m_MessageQueue = MessageQueue;
 }
 
 uint32 ClientRecvThread::Run()
@@ -32,8 +39,8 @@ uint32 ClientRecvThread::Run()
 			break;
 		}
 
-		FString Text = FString(UTF8_TO_TCHAR(RecvData.GetData()));
-		UE_LOG(LogTemp, Log, TEXT("%s"), *Text);
+		MessageConverter Converter = MessageConverter(RecvData);
+		m_MessageQueue->Enqueue(Converter.GetServerMessage());
 	}
 
 	return 0;
@@ -128,7 +135,7 @@ bool UHonorProjectGameInstance::ServerConnect(const FString& IPString, const FSt
 		return false;
 	}
 
-	m_RecvThread = new ClientRecvThread(m_ClientSocket);
+	m_RecvThread = new ClientRecvThread(m_ClientSocket, &m_MessageQueue);
 	m_RunnableThread = FRunnableThread::Create(m_RecvThread, TEXT("Recv Thread"));
 	
 	return true;
