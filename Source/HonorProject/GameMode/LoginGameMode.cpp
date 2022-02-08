@@ -13,11 +13,4 @@ ALoginGameMode::ALoginGameMode()
 void ALoginGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
-
-	if (false == GameInstance->GetMessageQueue().IsEmpty())
-	{
-		// 
-	}
 }

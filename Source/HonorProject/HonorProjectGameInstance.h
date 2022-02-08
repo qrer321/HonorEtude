@@ -6,7 +6,7 @@
 
 #include "GameInfo.h"
 #include "Engine/GameInstance.h"
-#include "Global/Messages.h"
+#include "Message/Messages.h"
 #include "HonorProjectGameInstance.generated.h"
 
 USTRUCT(BlueprintType)
@@ -90,7 +90,7 @@ public:
 	const FCharacterTableInfo* FindCharacterInfo(const FString& Name) const;
 
 public:
-	const TQueue<std::shared_ptr<GameServerMessage>>& GetMessageQueue() { return m_MessageQueue; }
+	TQueue<std::shared_ptr<GameServerMessage>>& GetMessageQueue() { return m_MessageQueue; }
 	
 public:
 	bool ClientThreadCheck();

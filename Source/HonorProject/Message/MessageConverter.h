@@ -3,7 +3,7 @@
 #include <vector>
 #include <memory>
 
-class MessageConverter
+class HONORPROJECT_API MessageConverter
 {
 private:
 	const TArray<uint8>&				m_Buffer;
@@ -21,7 +21,7 @@ public: // Default
 	MessageConverter& operator=(MessageConverter&& Other) = delete;
 
 public:
-	MessageID GetMessageID() const;
+	MessageType GetMessageID() const;
 	uint32_t GetMessageID_UINT() const;
 	std::shared_ptr<GameServerMessage> GetServerMessage();
 };

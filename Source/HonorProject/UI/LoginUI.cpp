@@ -3,7 +3,7 @@
 #include "LoginUI.h"
 #include "HonorProject/HonorProjectGameInstance.h"
 #include "../Global/ClientBlueprintFunctionLibrary.h"
-#include "../Global/Messages.h"
+#include "../Message/Messages.h"
 
 void ULoginUI::ResetInfo()
 {

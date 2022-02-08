@@ -2,7 +2,7 @@
 #include <memory>
 #include "GameServerSerializer.h"
 
-enum class MessageID
+enum class MessageType
 {
 	Login,
 	LoginResult,
@@ -18,12 +18,12 @@ enum class EGameServerCode
 class HONORPROJECT_API GameServerMessage : public std::enable_shared_from_this<GameServerMessage>
 {
 private: // Member Var
-	MessageID		m_ID;
+	MessageType		m_Type;
 	unsigned int	m_Size;
 
 public: // Default
 	GameServerMessage() = delete;
-	explicit GameServerMessage(MessageID ID);
+	explicit GameServerMessage(MessageType Type);
 	virtual ~GameServerMessage() = default;
 
 	GameServerMessage(const GameServerMessage& Other) = delete;
@@ -34,20 +34,20 @@ public:
 	GameServerMessage& operator=(GameServerMessage&& Other) = delete;
 
 public:
-	MessageID GetID() const { return m_ID; }
+	MessageType GetType() const { return m_Type; }
 
 public: // Member Function
 	virtual int SizeCheck() = 0;
 	unsigned int DataSizeCheck(const std::string& Value);
 
-	template<typename Type>
-	unsigned int DataSizeCheck(Type Value);
+	template<typename DataType>
+	unsigned int DataSizeCheck(DataType Value);
 
 	virtual void Serialize(GameServerSerializer& Serializer);
 	virtual void Deserialize(GameServerSerializer& Deserializer);
 };
 
-class LoginMessage : public GameServerMessage
+class HONORPROJECT_API LoginMessage : public GameServerMessage
 {
 public:
 	std::string m_ID;
@@ -70,7 +70,7 @@ public:
 	void Deserialize(GameServerSerializer& Deserializer) override;
 };
 
-class LoginResultMessage : public GameServerMessage
+class HONORPROJECT_API LoginResultMessage : public GameServerMessage
 {
 public:
 	EGameServerCode m_Code;

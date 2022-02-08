@@ -4,9 +4,10 @@
 #include "HonorProjectGameInstance.h"
 #include "Sockets.h"
 #include "SocketSubsystem.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Interfaces/IPv4/IPv4Address.h"
 #include "Interfaces/IPv4/IPv4Endpoint.h"
-#include "Global/MessageConverter.h"
+#include "Message/MessageConverter.h"
 
 ClientRecvThread::ClientRecvThread(FSocket* RecvSocket, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue)
 {
@@ -42,7 +43,7 @@ uint32 ClientRecvThread::Run()
 		MessageConverter Converter = MessageConverter(RecvData);
 		m_MessageQueue->Enqueue(Converter.GetServerMessage());
 	}
-
+	
 	return 0;
 }
 
@@ -153,7 +154,14 @@ void UHonorProjectGameInstance::CloseConnect()
 bool UHonorProjectGameInstance::Send(const TArray<uint8>& Data)
 {
 	if (0 == Data.Num())
+	{
 		return false;
+	}
+
+	if (nullptr == m_ClientSocket)
+	{
+		return false;
+	}
 
 	int32 DataSendSize = 0;
 	return m_ClientSocket->Send(Data.GetData(), Data.Num(), DataSendSize);

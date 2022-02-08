@@ -34,7 +34,7 @@ void GameServerSerializer::Write(const void* Data, unsigned int Size)
 void GameServerSerializer::operator<<(const std::string& Value)
 {
 	operator<<(static_cast<int>(Value.size()));
-	Write(reinterpret_cast<const void*>(&Value[0]), static_cast<unsigned int>(Value.size()));
+	Write(&Value[0], static_cast<unsigned int>(Value.size()));
 }
 
 void GameServerSerializer::operator<<(const int Value)
