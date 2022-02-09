@@ -9,7 +9,7 @@
 #include "Interfaces/IPv4/IPv4Endpoint.h"
 #include "../Message/MessageConverter.h"
 
-ClientRecvThread::ClientRecvThread(FSocket* RecvSocket, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue)
+ClientRecvThread::ClientRecvThread(FSocket* RecvSocket, TQueue<TSharedPtr<GameServerMessage>>* MessageQueue)
 {
 	if (nullptr == RecvSocket)
 	{
@@ -41,7 +41,7 @@ uint32 ClientRecvThread::Run()
 		}
 
 		MessageConverter Converter = MessageConverter(RecvData);
-		m_MessageQueue->Enqueue(Converter.GetServerMessage());
+		m_MessageQueue->Enqueue(MoveTemp(Converter.GetServerMessage()));
 	}
 	
 	return 0;

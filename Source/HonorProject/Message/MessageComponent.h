@@ -14,7 +14,7 @@ class HONORPROJECT_API UMessageComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
-	Dispatcher m_DisPatcher;
+	Dispatcher m_Dispatcher;
 
 public:	
 	// Sets default values for this component's properties

@@ -14,7 +14,7 @@ GameServerSerializer::GameServerSerializer(const TArray<uint8>& Data)
 
 GameServerSerializer::GameServerSerializer(GameServerSerializer&& Other) noexcept
 	: m_Offset(Other.m_Offset)
-	, m_Data(MoveTempIfPossible(Other.m_Data))
+	, m_Data(MoveTemp(Other.m_Data))
 {
 	
 }

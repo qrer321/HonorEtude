@@ -1,11 +1,8 @@
 #pragma once
 #include "../Global/GameInfo.h"
-#include <functional>
-#include <memory>
-
 #include "Messages.h"
 
-using MessageHandler = std::function<void(std::shared_ptr<GameServerMessage>)>;
+using MessageHandler = TFunction<void(TSharedPtr<GameServerMessage>)>;
 
 class Dispatcher
 {

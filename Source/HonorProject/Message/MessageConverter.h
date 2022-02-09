@@ -1,13 +1,12 @@
 #pragma once
 #include "Messages.h"
-#include <vector>
 #include <memory>
 
 class HONORPROJECT_API MessageConverter
 {
 private:
-	const TArray<uint8>&				m_Buffer;
-	std::shared_ptr<GameServerMessage>	m_Message;
+	const TArray<uint8>&			m_Buffer;
+	TSharedPtr<GameServerMessage>	m_Message;
 
 public: // Default
 	MessageConverter() = delete;
@@ -22,7 +21,7 @@ public: // Default
 
 public:
 	MessageType GetMessageID() const;
-	uint32_t GetMessageID_UINT() const;
-	std::shared_ptr<GameServerMessage> GetServerMessage();
+	unsigned int GetMessageID_UINT() const;
+	TSharedPtr<GameServerMessage>& GetServerMessage();
 };
 

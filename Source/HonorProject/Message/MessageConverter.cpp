@@ -11,10 +11,11 @@ MessageConverter::MessageConverter(const TArray<uint8>& Buffer)
 	switch (ID)
 	{
 	case MessageType::Login:
-		m_Message = std::make_shared<LoginMessage>();
+		
+		m_Message = MakeShared<LoginMessage>();
 		break;
 	case MessageType::LoginResult:
-		m_Message = std::make_shared<LoginResultMessage>();
+		m_Message = MakeShared<LoginResultMessage>();
 		break;
 	default:
 		break;
@@ -25,7 +26,7 @@ MessageConverter::MessageConverter(const TArray<uint8>& Buffer)
 
 MessageConverter::MessageConverter(MessageConverter&& Other) noexcept
 	: m_Buffer(Other.m_Buffer)
-	, m_Message(MoveTempIfPossible(Other.m_Message))
+	, m_Message(MoveTemp(Other.m_Message))
 {
 }
 
@@ -34,12 +35,12 @@ MessageType MessageConverter::GetMessageID() const
 	return m_Message->GetType();
 }
 
-uint32_t MessageConverter::GetMessageID_UINT() const
+unsigned int MessageConverter::GetMessageID_UINT() const
 {
-	return static_cast<uint32_t>(GetMessageID());
+	return static_cast<unsigned int>(GetMessageID());
 }
 
-std::shared_ptr<GameServerMessage> MessageConverter::GetServerMessage()
+TSharedPtr<GameServerMessage>& MessageConverter::GetServerMessage()
 {
 	return m_Message;
 }

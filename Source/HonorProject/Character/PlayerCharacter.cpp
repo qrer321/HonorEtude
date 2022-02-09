@@ -420,6 +420,8 @@ void APlayerCharacter::SetAttackTraceTimer(bool SetTimer)
 	{
 		GetWorldTimerManager().ClearTimer(m_AttackTraceTimer);
 		m_AlreadyDamagedEnemyArray.Empty();
+		
+		return;
 	}
 
 	if (!GetWorldTimerManager().TimerExists(m_AttackTraceTimer))

@@ -4,12 +4,16 @@
 
 #include "../Global/GameInfo.h"
 #include "GameFramework/GameMode.h"
+#include "../Message/MessageComponent.h"
 #include "LoginGameMode.generated.h"
 
 UCLASS()
 class HONORPROJECT_API ALoginGameMode : public AGameMode
 {
 	GENERATED_BODY()
+
+private:
+	UMessageComponent* m_MessageComponent;
 
 public:
 	ALoginGameMode();

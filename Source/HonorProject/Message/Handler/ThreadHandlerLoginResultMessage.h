@@ -5,13 +5,13 @@
 class HONORPROJECT_API ThreadHandlerLoginResultMessage
 {
 private:
-	UWorld*								m_World;
-	UHonorProjectGameInstance*			m_GameInstance;
-	std::shared_ptr<LoginResultMessage> m_LoginResultMessage;
+	UWorld*							m_World;
+	UHonorProjectGameInstance*		m_GameInstance;
+	TSharedPtr<LoginResultMessage>	m_LoginResultMessage;
 
 	public: // Default
 	ThreadHandlerLoginResultMessage() = delete;
-	explicit ThreadHandlerLoginResultMessage(std::shared_ptr<LoginResultMessage> ResultMessage);
+	explicit ThreadHandlerLoginResultMessage(TSharedPtr<LoginResultMessage> ResultMessage);
 	~ThreadHandlerLoginResultMessage() = default;
 
 	ThreadHandlerLoginResultMessage(const ThreadHandlerLoginResultMessage& Other) = delete;

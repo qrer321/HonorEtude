@@ -15,7 +15,7 @@ enum class EGameServerCode
 	MAX,
 };
 
-class HONORPROJECT_API GameServerMessage : public std::enable_shared_from_this<GameServerMessage>
+class HONORPROJECT_API GameServerMessage
 {
 private: // Member Var
 	MessageType		m_Type;

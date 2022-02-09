@@ -5,15 +5,15 @@
 #include "../Global/HonorProjectGameInstance.h"
 
 template <typename MessageHandler, typename MessageType>
-void OnMessageProcess(std::shared_ptr<GameServerMessage> Message, UHonorProjectGameInstance* GameInstance, UWorld* World)
+void OnMessageProcess(TSharedPtr<GameServerMessage> Message, UHonorProjectGameInstance* GameInstance, UWorld* World)
 {
-	std::shared_ptr<MessageType> ConvertMessage = std::static_pointer_cast<MessageType>(Message);
+	TSharedPtr<MessageType> ConvertMessage = StaticCastSharedPtr<MessageType>(MoveTemp(Message));
 	if (nullptr == ConvertMessage)
 	{
 		return;
 	}
 
-	MessageHandler Handler = MessageHandler(ConvertMessage);
+	MessageHandler Handler = MessageHandler(MoveTempIfPossible(ConvertMessage));
 	Handler.Initialize(GameInstance, World);
 	Handler.Start();
 }
@@ -27,11 +27,11 @@ void UMessageComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	m_DisPatcher.AddHandler(MessageType::LoginResult,
-	                        [this](std::shared_ptr<GameServerMessage> GameServerMessage)
+	m_Dispatcher.AddHandler(MessageType::LoginResult,
+	                        [this](TSharedPtr<GameServerMessage> GameServerMessage)
 	                        {
 		                        UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
-		                        OnMessageProcess<ThreadHandlerLoginResultMessage, LoginResultMessage>(GameServerMessage, GameInstance, GetWorld());
+		                        OnMessageProcess<ThreadHandlerLoginResultMessage, LoginResultMessage>(MoveTemp(GameServerMessage), GameInstance, GetWorld());
 	                        });
 }
 
@@ -43,22 +43,21 @@ void UMessageComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	while (false == GameInstance->GetMessageQueue().IsEmpty())
 	{
-		std::shared_ptr<GameServerMessage> ServerMessage;
+		TSharedPtr<GameServerMessage> ServerMessage;
 		GameInstance->GetMessageQueue().Dequeue(ServerMessage);
-
 		if (nullptr == ServerMessage)
 		{
 			continue;
 		}
 
 		MessageHandler Handler;
-		m_DisPatcher.GetHandler(ServerMessage->GetType(), Handler);
+		m_Dispatcher.GetHandler(ServerMessage->GetType(), Handler);
 		if (nullptr == Handler)
 		{
 			return;
 		}
 
-		Handler(ServerMessage);
+		Handler(MoveTemp(ServerMessage));
 	}
 }
 
