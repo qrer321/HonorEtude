@@ -2,8 +2,21 @@
 
 #include "LoginUI.h"
 #include "HonorProject/Global/HonorProjectGameInstance.h"
-#include "../Global/ClientBlueprintFunctionLibrary.h"
-#include "../Message/Messages.h"
+#include "HonorProject/Global/ClientBlueprintFunctionLibrary.h"
+#include "HonorProject/Message/Messages.h"
+
+void ULoginUI::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	m_IPString = TEXT("127.0.0.1");
+	m_PortString = TEXT("30001");
+	m_IDString = TEXT("LoginTest");
+	m_PWString = TEXT("LoginTest");
+
+	m_ConnectStatus = TEXT("Connect Required");
+	m_LoginStatus = TEXT("Login Required");
+}
 
 void ULoginUI::ResetInfo()
 {

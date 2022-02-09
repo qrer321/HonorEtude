@@ -2,8 +2,8 @@
 
 
 #include "MasterAICharacter.h"
-#include "../Global/HonorProjectGameInstance.h"
-#include "../UI/HealthHUD.h"
+#include "HonorProject/Global/HonorProjectGameInstance.h"
+#include "HonorProject/UI/Play/HealthHUD.h"
 
 // Sets default values
 AMasterAICharacter::AMasterAICharacter()
@@ -22,7 +22,7 @@ AMasterAICharacter::AMasterAICharacter()
 	m_HealthHUD->SetDrawSize(FVector2D(200, 15));
 	m_HealthHUD->SetRelativeLocation(FVector(0.f, 0.f, 110.f));
 	
-	static ConstructorHelpers::FClassFinder<UUserWidget> HPBarAsset(TEXT("WidgetBlueprint'/Game/HonorProejct/PlayRelevant/UI/UI_HPBar.UI_HPBar_C'"));
+	static ConstructorHelpers::FClassFinder<UUserWidget> HPBarAsset(TEXT("WidgetBlueprint'/Game/HonorProejct/PlayRelevant/UI/WB_HPBar.WB_HPBar_C'"));
 	if (HPBarAsset.Succeeded())
 		m_HealthHUD->SetWidgetClass(HPBarAsset.Class);
 }

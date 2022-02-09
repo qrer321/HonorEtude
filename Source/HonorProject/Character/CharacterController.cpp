@@ -3,10 +3,11 @@
 
 #include "CharacterController.h"
 
+#include "Blueprint/WidgetBlueprintLibrary.h"
+
 ACharacterController::ACharacterController()
 {
-
-	static ConstructorHelpers::FClassFinder<UMainHUD> MainHUDClass(TEXT("WidgetBlueprint'/Game/HonorProejct/PlayRelevant/UI/UI_MainHUD.UI_MainHUD_C'"));
+	static ConstructorHelpers::FClassFinder<UMainHUD> MainHUDClass(TEXT("WidgetBlueprint'/Game/HonorProejct/PlayRelevant/UI/WB_MainHUD.WB_MainHUD_C'"));
 	if (MainHUDClass.Succeeded())
 		m_MainHUDClass = MainHUDClass.Class;
 }
@@ -23,6 +24,12 @@ void ACharacterController::BeginPlay()
 	Super::BeginPlay();
 
 	Server_AddMainHUDToViewport();
+
+	// FInputModeGameAndUI InputMode;
+	// InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+	// InputMode.SetHideCursorDuringCapture(true);
+	//
+	// GetWorld()->GetFirstPlayerController()->SetInputMode(InputMode);
 }
 
 void ACharacterController::PlayerTick(float DeltaTime)

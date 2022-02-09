@@ -38,10 +38,6 @@ void ThreadHandlerLoginResultMessage::Start()
 	if (EGameServerCode::OK == m_LoginResultMessage->m_Code)
 	{
 		UGameplayStatics::OpenLevel(m_World, TEXT("PlayTestLevel"));
-
-		FInputModeGameOnly InputMode;
-		m_World->GetFirstPlayerController()->SetInputMode(InputMode);
-		
 		return;
 	}
 }
