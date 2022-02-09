@@ -7,7 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "../HonorProjectGameInstance.h"
+#include "../Global/HonorProjectGameInstance.h"
 #include "MasterAICharacter.h"
 
 APlayerCharacter::APlayerCharacter()
@@ -52,19 +52,19 @@ APlayerCharacter::APlayerCharacter()
 		m_SMSword->SetStaticMesh(SMSwordAsset.Object);
 
 
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> EquipAsset(TEXT("AnimMontage'/Game/HonorProejct/Character/AnimMontage/GreatSword_Equip_Montage.GreatSword_Equip_Montage'"));
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> EquipAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Equip_Montage.GreatSword_Equip_Montage'"));
 	if (EquipAsset.Succeeded())
 		m_EquipAnimMontage = EquipAsset.Object;
 
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackUpAsset(TEXT("AnimMontage'/Game/HonorProejct/Character/AnimMontage/GreatSword_Attack_Up_Montage.GreatSword_Attack_Up_Montage'"));
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackUpAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Attack_Up_Montage.GreatSword_Attack_Up_Montage'"));
 	if (AttackUpAsset.Succeeded())
 		m_AttackUpMontage = AttackUpAsset.Object;
 
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackLeftAsset(TEXT("AnimMontage'/Game/HonorProejct/Character/AnimMontage/GreatSword_Attack_Left_Montage.GreatSword_Attack_Left_Montage'"));
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackLeftAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Attack_Left_Montage.GreatSword_Attack_Left_Montage'"));
 	if (AttackLeftAsset.Succeeded())
 		m_AttackLeftMontage = AttackLeftAsset.Object;
 
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackRightAsset(TEXT("AnimMontage'/Game/HonorProejct/Character/AnimMontage/GreatSword_Attack_Right_Montage.GreatSword_Attack_Right_Montage'"));
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackRightAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Attack_Right_Montage.GreatSword_Attack_Right_Montage'"));
 	if (AttackRightAsset.Succeeded())
 		m_AttackRightMontage = AttackRightAsset.Object;
 }
@@ -388,14 +388,12 @@ void APlayerCharacter::CombatCameraSwitch()
 
 void APlayerCharacter::SetDetectAttackDirectionTimer()
 {
-	if (!IsValid(m_CharacterController))
-		return;
-	
-	if (m_IsCombatMode)
+	if (false == IsValid(m_CharacterController))
 	{
-		GetWorldTimerManager().SetTimer(m_DetectAttackDirectionTimer, this, &APlayerCharacter::DetectAttackDirection, 0.1f, true);
+		return;
 	}
-	else
+
+	if (false == m_IsCombatMode)
 	{
 		// 다음번 LockOn을 위해 Reticle 알파값 초기화
 		//m_AttackDirection = EAttackDirection::None;
@@ -406,6 +404,9 @@ void APlayerCharacter::SetDetectAttackDirectionTimer()
 		
 		GetWorldTimerManager().ClearTimer(m_DetectAttackDirectionTimer);
 	}
+
+	GetWorldTimerManager().SetTimer(m_DetectAttackDirectionTimer, this, &APlayerCharacter::DetectAttackDirection, 0.1f,
+	                                true);
 }
 
 void APlayerCharacter::SetControllerYawTimer(float AnimMontageLength)
@@ -415,16 +416,16 @@ void APlayerCharacter::SetControllerYawTimer(float AnimMontageLength)
 
 void APlayerCharacter::SetAttackTraceTimer(bool SetTimer)
 {
-	if (SetTimer)
-	{
-		if (!GetWorldTimerManager().TimerExists(m_AttackTraceTimer))
-			GetWorldTimerManager().SetTimer(m_AttackTraceTimer, this, &APlayerCharacter::AttackTrace, 0.01f, true);		
-	}
-	else
+	if (false == SetTimer)
 	{
 		GetWorldTimerManager().ClearTimer(m_AttackTraceTimer);
 		m_AlreadyDamagedEnemyArray.Empty();
+		
+		return;
 	}
+
+	if (!GetWorldTimerManager().TimerExists(m_AttackTraceTimer))
+		GetWorldTimerManager().SetTimer(m_AttackTraceTimer, this, &APlayerCharacter::AttackTrace, 0.01f, true);
 }
 
 /*
@@ -433,7 +434,7 @@ void APlayerCharacter::SetAttackTraceTimer(bool SetTimer)
  */
 void APlayerCharacter::DetectAttackDirection()
 {
-	if (!IsValid(m_CharacterController))
+	if (false == IsValid(m_CharacterController))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Character Controller Is Not Valid"));
 		return;

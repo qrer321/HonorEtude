@@ -1,8 +1,8 @@
 #include "Messages.h"
 
 /////////////////////////////// GameServerMessage ///////////////////////////////
-GameServerMessage::GameServerMessage(MessageID ID)
-	: m_ID(ID)
+GameServerMessage::GameServerMessage(MessageType Type)
+	: m_Type(Type)
 	, m_Size(-1)
 {
 }
@@ -25,64 +25,64 @@ unsigned int GameServerMessage::DataSizeCheck(Type Value)
 
 void GameServerMessage::Serialize(GameServerSerializer& Serializer)
 {
-	Serializer << static_cast<int>(m_ID);
+	Serializer << static_cast<int>(m_Type);
 	Serializer << SizeCheck();
 }
 
 void GameServerMessage::Deserialize(GameServerSerializer& Deserializer)
 {
-	int ID;
-	Deserializer >> ID;
-	m_ID = static_cast<MessageID>(ID);
+	int Type;
+	Deserializer >> Type;
+	m_Type = static_cast<MessageType>(Type);
 	Deserializer >> m_Size;
 }
 
 
 /////////////////////////////// LoginPacket ///////////////////////////////
-LoginPacket::LoginPacket()
-	: GameServerMessage(MessageID::Login)
+LoginMessage::LoginMessage()
+	: GameServerMessage(MessageType::Login)
 {
 }
 
-int LoginPacket::SizeCheck()
+int LoginMessage::SizeCheck()
 {
 	return static_cast<int>(DataSizeCheck(m_ID) + DataSizeCheck(m_PW));
 }
 
-void LoginPacket::Serialize(GameServerSerializer& serializer)
+void LoginMessage::Serialize(GameServerSerializer& Serializer)
 {
-	GameServerMessage::Serialize(serializer);
-	serializer << m_ID;
-	serializer << m_PW;
+	GameServerMessage::Serialize(Serializer);
+	Serializer << m_ID;
+	Serializer << m_PW;
 }
 
-void LoginPacket::Deserialize(GameServerSerializer& deserializer)
+void LoginMessage::Deserialize(GameServerSerializer& Deserializer)
 {
-	GameServerMessage::Deserialize(deserializer);
-	deserializer >> m_ID;
-	deserializer >> m_PW;
+	GameServerMessage::Deserialize(Deserializer);
+	Deserializer >> m_ID;
+	Deserializer >> m_PW;
 }
 
 
 /////////////////////////////// LoginResultPacket ///////////////////////////////
-LoginResultPacket::LoginResultPacket()
-	: GameServerMessage(MessageID::LoginResult)
+LoginResultMessage::LoginResultMessage()
+	: GameServerMessage(MessageType::LoginResult)
 	, m_Code(EGameServerCode::MAX)
 {
 }
 
-int LoginResultPacket::SizeCheck()
+int LoginResultMessage::SizeCheck()
 {
 	return static_cast<int>(DataSizeCheck(m_Code));
 }
 
-void LoginResultPacket::Serialize(GameServerSerializer& Serializer)
+void LoginResultMessage::Serialize(GameServerSerializer& Serializer)
 {
 	GameServerMessage::Serialize(Serializer);
 	Serializer << static_cast<int>(m_Code);
 }
 
-void LoginResultPacket::Deserialize(GameServerSerializer& Deserializer)
+void LoginResultMessage::Deserialize(GameServerSerializer& Deserializer)
 {
 	GameServerMessage::Deserialize(Deserializer);
 

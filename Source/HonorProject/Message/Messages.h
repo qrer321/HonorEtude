@@ -1,7 +1,8 @@
 #pragma once
+#include <memory>
 #include "GameServerSerializer.h"
 
-enum class MessageID
+enum class MessageType
 {
 	Login,
 	LoginResult,
@@ -17,12 +18,12 @@ enum class EGameServerCode
 class HONORPROJECT_API GameServerMessage
 {
 private: // Member Var
-	MessageID		m_ID;
+	MessageType		m_Type;
 	unsigned int	m_Size;
 
 public: // Default
 	GameServerMessage() = delete;
-	explicit GameServerMessage(MessageID ID);
+	explicit GameServerMessage(MessageType Type);
 	virtual ~GameServerMessage() = default;
 
 	GameServerMessage(const GameServerMessage& Other) = delete;
@@ -33,35 +34,35 @@ public:
 	GameServerMessage& operator=(GameServerMessage&& Other) = delete;
 
 public:
-	MessageID GetID() const { return m_ID; }
+	MessageType GetType() const { return m_Type; }
 
 public: // Member Function
 	virtual int SizeCheck() = 0;
 	unsigned int DataSizeCheck(const std::string& Value);
 
-	template<typename Type>
-	unsigned int DataSizeCheck(Type Value);
+	template<typename DataType>
+	unsigned int DataSizeCheck(DataType Value);
 
 	virtual void Serialize(GameServerSerializer& Serializer);
 	virtual void Deserialize(GameServerSerializer& Deserializer);
 };
 
-class LoginPacket : public GameServerMessage
+class HONORPROJECT_API LoginMessage : public GameServerMessage
 {
 public:
 	std::string m_ID;
 	std::string m_PW;
 
 public:
-	LoginPacket();
-	~LoginPacket() override = default;
+	LoginMessage();
+	~LoginMessage() override = default;
 
-	LoginPacket(const LoginPacket& Other) = delete;
-	LoginPacket(LoginPacket&& Other) noexcept = delete;
+	LoginMessage(const LoginMessage& Other) = delete;
+	LoginMessage(LoginMessage&& Other) noexcept = delete;
 
 public:
-	LoginPacket& operator=(const LoginPacket& Other) = delete;
-	LoginPacket& operator=(LoginPacket&& Other) = delete;
+	LoginMessage& operator=(const LoginMessage& Other) = delete;
+	LoginMessage& operator=(LoginMessage&& Other) = delete;
 
 public:
 	int SizeCheck() override;
@@ -69,21 +70,21 @@ public:
 	void Deserialize(GameServerSerializer& Deserializer) override;
 };
 
-class LoginResultPacket : public GameServerMessage
+class HONORPROJECT_API LoginResultMessage : public GameServerMessage
 {
 public:
 	EGameServerCode m_Code;
 
 public:
-	LoginResultPacket();
-	~LoginResultPacket() override = default;
+	LoginResultMessage();
+	~LoginResultMessage() override = default;
 
-	LoginResultPacket(const LoginResultPacket& Other) = delete;
-	LoginResultPacket(LoginResultPacket&& Other) noexcept = delete;
+	LoginResultMessage(const LoginResultMessage& Other) = delete;
+	LoginResultMessage(LoginResultMessage&& Other) noexcept = delete;
 
 public:
-	LoginResultPacket& operator=(const LoginResultPacket& Other) = delete;
-	LoginResultPacket& operator=(LoginResultPacket&& Other) = delete;
+	LoginResultMessage& operator=(const LoginResultMessage& Other) = delete;
+	LoginResultMessage& operator=(LoginResultMessage&& Other) = delete;
 
 public:
 	int SizeCheck() override;

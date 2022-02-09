@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../GameInfo.h"
+#include "HonorProject/Global/GameInfo.h"
 #include "Blueprint/UserWidget.h"
 #include "LoginUI.generated.h"
 
@@ -30,6 +30,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Category = LoginInfo)
 	FString m_LoginStatus;
 
+public:
+	virtual void NativeConstruct() override;
+	
 public:
 	UFUNCTION(BlueprintCallable, Category="Login")
 	void ResetInfo();

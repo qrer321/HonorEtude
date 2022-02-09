@@ -4,17 +4,25 @@
 #include "HonorProjectGameInstance.h"
 #include "Sockets.h"
 #include "SocketSubsystem.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Interfaces/IPv4/IPv4Address.h"
 #include "Interfaces/IPv4/IPv4Endpoint.h"
+#include "../Message/MessageConverter.h"
 
-ClientRecvThread::ClientRecvThread(FSocket* RecvSocket)
+ClientRecvThread::ClientRecvThread(FSocket* RecvSocket, TQueue<TSharedPtr<GameServerMessage>>* MessageQueue)
 {
 	if (nullptr == RecvSocket)
 	{
 		UE_LOG(LogTemp, Error, TEXT("RecvSocket Error"));
 	}
 
+	if (nullptr == MessageQueue)
+	{
+		UE_LOG(LogTemp, Error, TEXT("MessageQueue Error"));
+	}
+
 	m_RecvSocket = RecvSocket;
+	m_MessageQueue = MessageQueue;
 }
 
 uint32 ClientRecvThread::Run()
@@ -32,10 +40,10 @@ uint32 ClientRecvThread::Run()
 			break;
 		}
 
-		FString Text = FString(UTF8_TO_TCHAR(RecvData.GetData()));
-		UE_LOG(LogTemp, Log, TEXT("%s"), *Text);
+		MessageConverter Converter = MessageConverter(RecvData);
+		m_MessageQueue->Enqueue(MoveTemp(Converter.GetServerMessage()));
 	}
-
+	
 	return 0;
 }
 
@@ -51,7 +59,7 @@ void ClientRecvThread::Exit()
 
 UHonorProjectGameInstance::UHonorProjectGameInstance()
 {
-	static ConstructorHelpers::FObjectFinder<UDataTable> CharacterTableAsset(TEXT("DataTable'/Game/HonorProejct/Character/Data/DTCharacterInfo.DTCharacterInfo'"));
+	static ConstructorHelpers::FObjectFinder<UDataTable> CharacterTableAsset(TEXT("DataTable'/Game/HonorProejct/PlayRelevant/Character/Data/DTCharacterInfo.DTCharacterInfo'"));
 	if (CharacterTableAsset.Succeeded())
 		m_CharacterInfoTable = CharacterTableAsset.Object;
 }
@@ -128,7 +136,7 @@ bool UHonorProjectGameInstance::ServerConnect(const FString& IPString, const FSt
 		return false;
 	}
 
-	m_RecvThread = new ClientRecvThread(m_ClientSocket);
+	m_RecvThread = new ClientRecvThread(m_ClientSocket, &m_MessageQueue);
 	m_RunnableThread = FRunnableThread::Create(m_RecvThread, TEXT("Recv Thread"));
 	
 	return true;
@@ -146,7 +154,14 @@ void UHonorProjectGameInstance::CloseConnect()
 bool UHonorProjectGameInstance::Send(const TArray<uint8>& Data)
 {
 	if (0 == Data.Num())
+	{
 		return false;
+	}
+
+	if (nullptr == m_ClientSocket)
+	{
+		return false;
+	}
 
 	int32 DataSendSize = 0;
 	return m_ClientSocket->Send(Data.GetData(), Data.Num(), DataSendSize);

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../GameInfo.h"
+#include "../Global/GameInfo.h"
 #include "Animation/AnimInstance.h"
 #include "CharacterAnimInstance.generated.h"
 

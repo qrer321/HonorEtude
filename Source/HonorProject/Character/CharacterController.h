@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "../GameInfo.h"
+#include "../Global/GameInfo.h"
 #include "GameFramework/PlayerController.h"
-#include "../UI/MainHUD.h"
+#include "HonorProject/UI/Play/MainHUD.h"
 #include "CharacterController.generated.h"
 
 UCLASS()

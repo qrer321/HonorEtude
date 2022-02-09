@@ -12,6 +12,13 @@ GameServerSerializer::GameServerSerializer(const TArray<uint8>& Data)
 {
 }
 
+GameServerSerializer::GameServerSerializer(GameServerSerializer&& Other) noexcept
+	: m_Offset(Other.m_Offset)
+	, m_Data(MoveTemp(Other.m_Data))
+{
+	
+}
+
 void GameServerSerializer::Read(void* Data, unsigned int Size)
 {
 	memcpy_s(Data, Size, &m_Data[m_Offset], Size);
@@ -27,7 +34,7 @@ void GameServerSerializer::Write(const void* Data, unsigned int Size)
 void GameServerSerializer::operator<<(const std::string& Value)
 {
 	operator<<(static_cast<int>(Value.size()));
-	Write(reinterpret_cast<const void*>(&Value[0]), static_cast<unsigned int>(Value.size()));
+	Write(&Value[0], static_cast<unsigned int>(Value.size()));
 }
 
 void GameServerSerializer::operator<<(const int Value)

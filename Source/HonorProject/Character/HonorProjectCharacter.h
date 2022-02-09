@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../GameInfo.h"
+#include "../Global/GameInfo.h"
 #include "GameFramework/Character.h"
 #include "HonorProjectCharacter.generated.h"
 

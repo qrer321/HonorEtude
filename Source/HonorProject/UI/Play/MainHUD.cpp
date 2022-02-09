@@ -7,7 +7,7 @@ void UMainHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	m_AttackReticleHUD = Cast<UAttackReticleHUD>(GetWidgetFromName(TEXT("UI_AttackReticleHUD")));
+	m_AttackReticleHUD = Cast<UAttackReticleHUD>(GetWidgetFromName(TEXT("WB_AttackReticleHUD")));
 }
 
 void UMainHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
