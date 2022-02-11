@@ -40,7 +40,8 @@ void ULoginUI::ServerConnect()
 void ULoginUI::ServerLogin()
 {
 	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
-
+	GameInstance->m_UserID = m_IDString;
+	
 	std::string ID;
 	std::string PW;
 	UClientBlueprintFunctionLibrary::FStringToUTF8(m_IDString, ID);

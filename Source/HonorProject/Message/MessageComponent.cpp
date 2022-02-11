@@ -33,6 +33,13 @@ void UMessageComponent::BeginPlay()
 		                        UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
 		                        OnMessageProcess<ThreadHandlerLoginResultMessage, LoginResultMessage>(MoveTemp(GameServerMessage), GameInstance, GetWorld());
 	                        });
+
+	m_Dispatcher.AddHandler(MessageType::Chat,
+							[this](std::shared_ptr<GameServerMessage> GameServerMessage)
+							{
+								UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+								OnMessageProcess<ThreadHandlerChatMessage, ChatMessage>(MoveTemp(GameServerMessage), GameInstance, GetWorld());
+							});
 }
 
 void UMessageComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

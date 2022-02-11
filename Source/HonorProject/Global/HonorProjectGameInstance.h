@@ -6,7 +6,8 @@
 
 #include "GameInfo.h"
 #include "Engine/GameInstance.h"
-#include "../Message/Messages.h"
+#include "HonorProject/Message/Messages.h"
+#include "HonorProject/UI/Play/ChatWindow.h"
 #include "HonorProjectGameInstance.generated.h"
 
 USTRUCT(BlueprintType)
@@ -79,6 +80,13 @@ private:
 	FSocket*			m_ClientSocket;
 
 	TQueue<std::shared_ptr<GameServerMessage>> m_MessageQueue;
+
+public:
+	// Temp Member Variable
+	FString			m_UserID;
+
+	UPROPERTY()
+	UChatWindow*	m_ChatWindow;
 
 private:
 	UPROPERTY()

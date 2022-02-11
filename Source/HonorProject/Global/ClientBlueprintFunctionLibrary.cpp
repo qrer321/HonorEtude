@@ -29,3 +29,14 @@ bool UClientBlueprintFunctionLibrary::FStringToUTF8Data(const FString& String, s
 
 	return true;
 }
+
+bool UClientBlueprintFunctionLibrary::UTF8ToFString(const std::string& UTF8, FString& String)
+{
+	String = UTF8ToFString(UTF8);
+	return true;
+}
+
+FString UClientBlueprintFunctionLibrary::UTF8ToFString(const std::string& UTF8)
+{
+	return FString(UTF8_TO_TCHAR(&UTF8[0]));
+}

@@ -8,6 +8,16 @@
 #include "HonorProject/Global/ClientBlueprintFunctionLibrary.h"
 #include "HonorProject/Message/Messages.h"
 
+void UChatWindow::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	m_MessageListView = Cast<UListView>(GetWidgetFromName(TEXT("MessageList")));
+
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetGameInstance());
+	GameInstance->m_ChatWindow = this;
+}
+
 void UChatWindow::SendChat(FString Text, ETextCommit::Type CommitType)
 {
 	if (ETextCommit::Type::OnEnter != CommitType)
@@ -15,13 +25,15 @@ void UChatWindow::SendChat(FString Text, ETextCommit::Type CommitType)
 		return;
 	}
 
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetGameInstance());
+	
 	UChatMessageObject* ChatMessageObject = NewObject<UChatMessageObject>();
-	ChatMessageObject->SetID(TEXT("TestObject"));
+	ChatMessageObject->SetID(GameInstance->m_UserID);
 	ChatMessageObject->SetMessage(Text);
 
 	m_MessageListView->AddItem(ChatMessageObject);
 
-	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetGameInstance());
+	
 	ChatMessage Message;
 
 	std::string ID;
@@ -66,4 +78,19 @@ void UChatWindow::AddNewMessage(UObject* Object, UUserWidget* UserWidget)
 	}
 
 	MessageWidget->SetChatString(MessageObject->GetID() + TEXT(" : ") + MessageObject->GetMessage());
+}
+
+void UChatWindow::AddMessage(UChatMessageObject* ChatMessageObject)
+{
+	m_MessageListView->AddItem(ChatMessageObject);
+}
+
+void UChatWindow::AddMessage(const FString& ID, const FString& Message)
+{
+	UChatMessageObject* MessageObject = NewObject<UChatMessageObject>();
+
+	MessageObject->SetID(ID);
+	MessageObject->SetMessage(Message);
+
+	AddMessage(MessageObject);
 }

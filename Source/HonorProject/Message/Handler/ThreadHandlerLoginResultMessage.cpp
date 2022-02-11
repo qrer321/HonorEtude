@@ -1,5 +1,4 @@
 ﻿#include "ThreadHandlerLoginResultMessage.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
 
 ThreadHandlerLoginResultMessage::ThreadHandlerLoginResultMessage(std::shared_ptr<LoginResultMessage> ResultMessage)
 	: m_World(nullptr)
