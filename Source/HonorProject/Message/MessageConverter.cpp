@@ -1,46 +1,52 @@
 #include "MessageConverter.h"
-#include "GameServerSerializer.h"
 
-MessageConverter::MessageConverter(const TArray<uint8>& Buffer)
-	: m_Buffer(Buffer)
+MessageConverter::MessageConverter(const std::vector<unsigned char>& buffer)
+	: m_Buffer(buffer)
 {
-	GameServerSerializer Serializer = GameServerSerializer(Buffer);
-	MessageType ID;
+	GameServerSerializer serializer = GameServerSerializer(buffer);
+	MessageType id;
 
-	memcpy_s(&ID, sizeof(MessageType), &Buffer[0], sizeof(MessageType));
-	switch (ID)
+	memcpy_s(&id, sizeof(MessageType), &buffer[0], sizeof(MessageType));
+	switch (id)
 	{
 	case MessageType::Login:
-		
-		m_Message = MakeShared<LoginMessage>();
+		m_Message = std::make_shared<LoginMessage>();
 		break;
 	case MessageType::LoginResult:
-		m_Message = MakeShared<LoginResultMessage>();
+		m_Message = std::make_shared<LoginResultMessage>();
+		break;
+	case MessageType::Chat:
+		m_Message = std::make_shared<ChatMessage>();
 		break;
 	default:
 		break;
 	}
 
-	m_Message->Deserialize(Serializer);
+	if (nullptr == m_Message)
+	{
+		return;
+	}
+
+	m_Message->Deserialize(serializer);
 }
 
-MessageConverter::MessageConverter(MessageConverter&& Other) noexcept
-	: m_Buffer(Other.m_Buffer)
-	, m_Message(MoveTemp(Other.m_Message))
+MessageConverter::MessageConverter(MessageConverter&& other) noexcept
+	: m_Buffer(other.m_Buffer)
+	, m_Message(std::move(other.m_Message))
 {
 }
 
-MessageType MessageConverter::GetMessageID() const
+MessageType MessageConverter::GetMessageType() const
 {
 	return m_Message->GetType();
 }
 
-unsigned int MessageConverter::GetMessageID_UINT() const
+uint32_t MessageConverter::GetMessageType_UINT() const
 {
-	return static_cast<unsigned int>(GetMessageID());
+	return static_cast<uint32_t>(GetMessageType());
 }
 
-TSharedPtr<GameServerMessage>& MessageConverter::GetServerMessage()
+std::shared_ptr<GameServerMessage>& MessageConverter::GetServerMessage()
 {
 	return m_Message;
 }

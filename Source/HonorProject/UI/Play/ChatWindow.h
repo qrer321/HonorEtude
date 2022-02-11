@@ -21,7 +21,7 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable, Category = Chat)
-	void SendChat(FString ChatMessage, ETextCommit::Type CommitType);
+	void SendChat(FString Text, ETextCommit::Type CommitType);
 
 	UFUNCTION(BlueprintCallable, Category = Chat)
 	void AddNewMessage(UObject* Object, UUserWidget* UserWidget);

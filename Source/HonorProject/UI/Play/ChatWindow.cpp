@@ -4,8 +4,11 @@
 #include "ChatWindow.h"
 #include "ChatMessageWidget.h"
 #include "ChatMessageObject.h"
+#include "HonorProject/Global/HonorProjectGameInstance.h"
+#include "HonorProject/Global/ClientBlueprintFunctionLibrary.h"
+#include "HonorProject/Message/Messages.h"
 
-void UChatWindow::SendChat(FString ChatMessage, ETextCommit::Type CommitType)
+void UChatWindow::SendChat(FString Text, ETextCommit::Type CommitType)
 {
 	if (ETextCommit::Type::OnEnter != CommitType)
 	{
@@ -14,9 +17,28 @@ void UChatWindow::SendChat(FString ChatMessage, ETextCommit::Type CommitType)
 
 	UChatMessageObject* ChatMessageObject = NewObject<UChatMessageObject>();
 	ChatMessageObject->SetID(TEXT("TestObject"));
-	ChatMessageObject->SetMessage(ChatMessage);
+	ChatMessageObject->SetMessage(Text);
 
 	m_MessageListView->AddItem(ChatMessageObject);
+
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetGameInstance());
+	ChatMessage Message;
+
+	std::string ID;
+	std::string SendMessage;
+
+	const FString ObjectID = ChatMessageObject->GetID();
+	const FString ObjectMessage = ChatMessageObject->GetMessage();
+	UClientBlueprintFunctionLibrary::FStringToUTF8(ObjectID, ID);
+	UClientBlueprintFunctionLibrary::FStringToUTF8(ObjectMessage, SendMessage);
+
+	Message.m_ID = ID;
+	Message.m_Message = SendMessage;
+
+	GameServerSerializer Serializer;
+	Message.Serialize(Serializer);
+
+	GameInstance->Send(Serializer.GetData());
 }
 
 void UChatWindow::AddNewMessage(UObject* Object, UUserWidget* UserWidget)

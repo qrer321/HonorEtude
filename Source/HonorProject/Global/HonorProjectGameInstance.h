@@ -50,11 +50,11 @@ public:
 class ClientRecvThread : public FRunnable
 {
 public:
-	ClientRecvThread(FSocket* RecvSocket, TQueue<TSharedPtr<GameServerMessage>>* MessageQueue);
+	ClientRecvThread(FSocket* RecvSocket, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue);
 
 private:
 	FSocket* m_RecvSocket;
-	TQueue<TSharedPtr<GameServerMessage>>* m_MessageQueue;
+	TQueue<std::shared_ptr<GameServerMessage>>* m_MessageQueue;
 
 public:
 	virtual uint32 Run() override;
@@ -78,7 +78,7 @@ private:
 	ISocketSubsystem*	m_SocketSubsystem;
 	FSocket*			m_ClientSocket;
 
-	TQueue<TSharedPtr<GameServerMessage>> m_MessageQueue;
+	TQueue<std::shared_ptr<GameServerMessage>> m_MessageQueue;
 
 private:
 	UPROPERTY()
@@ -90,12 +90,12 @@ public:
 	const FCharacterTableInfo* FindCharacterInfo(const FString& Name) const;
 
 public:
-	TQueue<TSharedPtr<GameServerMessage>>& GetMessageQueue() { return m_MessageQueue; }
+	TQueue<std::shared_ptr<GameServerMessage>>& GetMessageQueue() { return m_MessageQueue; }
 	
 public:
 	bool ClientThreadCheck();
 	bool ServerConnect(const FString& IPString, const FString& PortString);
 	void CloseConnect();
 
-	bool Send(const TArray<uint8>& Data);
+	bool Send(const std::vector<uint8>& Data);
 };

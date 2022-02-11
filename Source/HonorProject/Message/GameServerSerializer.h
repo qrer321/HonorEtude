@@ -1,37 +1,37 @@
 #pragma once
+#include <vector>
 #include <string>
 
-class HONORPROJECT_API GameServerSerializer
+class GameServerSerializer
 {
-private:
-	unsigned int	m_Offset;
-	TArray<uint8>	m_Data;
+private: // Member Var
+	unsigned int				m_Offset;
+	std::vector<unsigned char>	m_Data;
 
-public:
+public: // Default
 	GameServerSerializer();
-	explicit GameServerSerializer(const TArray<uint8>& Data);
+	explicit GameServerSerializer(const std::vector<unsigned char>& data);
 	~GameServerSerializer() = default;
 
-	GameServerSerializer(const GameServerSerializer& Other) = delete;
-	GameServerSerializer(GameServerSerializer&& Other) noexcept;
+	GameServerSerializer(const GameServerSerializer& other) = delete;
+	GameServerSerializer(GameServerSerializer&& other) noexcept;
 
-	GameServerSerializer& operator=(const GameServerSerializer& Other) = delete;
-	GameServerSerializer& operator=(GameServerSerializer&& Other) = delete;
-
-public:
-	void operator<<(const std::string& Value);
-	void operator<<(const int Value);
-	void operator<<(const unsigned int Value);
-
-	void operator>>(std::string& Value);
-	void operator>>(int& Value);
-	void operator>>(unsigned int& Value);
+	GameServerSerializer& operator=(const GameServerSerializer& other) = delete;
+	GameServerSerializer& operator=(GameServerSerializer&& other) = delete;
 
 public:
-	const TArray<uint8>& GetData() { return m_Data; }
+	void operator<<(const std::string& value);
+	void operator<<(const int value);
+	void operator<<(const unsigned int value);
+
+	void operator>>(std::string& value);
+	void operator>>(int& value);
+	void operator>>(unsigned int& value);
 
 public:
-	void Read(void* Data, unsigned int Size);
-	void Write(const void* Data, unsigned int Size);
+	const std::vector<unsigned char>& GetData() { return m_Data; }
+
+public:
+	void Read(void* data, unsigned int size);
+	void Write(const void* data, unsigned int size);
 };
-
