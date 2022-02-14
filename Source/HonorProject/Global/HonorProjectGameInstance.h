@@ -54,6 +54,7 @@ public:
 	ClientRecvThread(FSocket* RecvSocket, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue);
 
 private:
+	TAtomic<bool> m_IsThreadRunnable;
 	FSocket* m_RecvSocket;
 	TQueue<std::shared_ptr<GameServerMessage>>* m_MessageQueue;
 
@@ -61,6 +62,8 @@ public:
 	virtual uint32 Run() override;
 	virtual void Stop() override;
 	virtual void Exit() override;
+
+	void Close();
 };
 
 UCLASS()
@@ -95,6 +98,7 @@ private:
 public:
 	virtual void Init() override;
 	virtual void BeginDestroy() override;
+	virtual void FinishDestroy() override;
 	const FCharacterTableInfo* FindCharacterInfo(const FString& Name) const;
 
 public:

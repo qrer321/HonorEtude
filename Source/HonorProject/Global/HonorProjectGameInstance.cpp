@@ -8,6 +8,7 @@
 #include "Interfaces/IPv4/IPv4Address.h"
 #include "Interfaces/IPv4/IPv4Endpoint.h"
 #include "../Message/MessageConverter.h"
+#include "../Message/Handler/ThreadHandlerServerDestroyMessage.h"
 
 ClientRecvThread::ClientRecvThread(FSocket* RecvSocket, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue)
 {
@@ -23,13 +24,14 @@ ClientRecvThread::ClientRecvThread(FSocket* RecvSocket, TQueue<std::shared_ptr<G
 
 	m_RecvSocket = RecvSocket;
 	m_MessageQueue = MessageQueue;
+	m_IsThreadRunnable = true;
 }
 
 uint32 ClientRecvThread::Run()
 {
 	UE_LOG(LogTemp, Log, TEXT("Recv Start"));
 
-	while (true)
+	while (m_IsThreadRunnable)
 	{
 		std::vector<uint8> RecvData;
 		RecvData.resize(1024);
@@ -37,6 +39,34 @@ uint32 ClientRecvThread::Run()
 		int32 RecvDataSize = 0;
 		if (false == m_RecvSocket->Recv(&RecvData[0], RecvData.size(), RecvDataSize))
 		{
+			auto ConnectionState = m_RecvSocket->GetConnectionState();
+
+			switch (ConnectionState)
+			{
+			case SCS_NotConnected:
+				break;
+			case SCS_Connected:
+				{
+					// 클라이언트는 켜져있는데 서버가 종료되었을 때.
+					// RecvSocket은 아직 Connected 상태라고 보고 해당 타입을 반환한다.
+					// ServerDestroyMessage 클래스는 아무것도 구현되어있지 않은 빈 ServerMessage 클래스이다.
+					// 이후 서버가 직접 Disconnect 할때에도 동일한 메시지를 보낼 것이다.
+					ServerDestroyMessage DestroyMessage;
+					GameServerSerializer Serializer;
+					DestroyMessage.Serialize(Serializer);
+
+					MessageConverter Converter = MessageConverter(Serializer.GetData());
+					m_MessageQueue->Enqueue(Converter.GetServerMessage());
+					return 0;
+				}
+				break;
+			case SCS_ConnectionError:
+				// 직접 클라이언트를 종료했을 때
+				break;
+			default:
+				break;
+			}
+
 			break;
 		}
 
@@ -55,6 +85,11 @@ void ClientRecvThread::Stop()
 void ClientRecvThread::Exit()
 {
 	FRunnable::Exit();
+}
+
+void ClientRecvThread::Close()
+{
+	m_IsThreadRunnable = false;
 }
 
 UHonorProjectGameInstance::UHonorProjectGameInstance()
@@ -76,6 +111,13 @@ void UHonorProjectGameInstance::Init()
 void UHonorProjectGameInstance::BeginDestroy()
 {
 	Super::BeginDestroy();
+
+	CloseConnect();
+}
+
+void UHonorProjectGameInstance::FinishDestroy()
+{
+	Super::FinishDestroy();
 
 	CloseConnect();
 }
@@ -144,8 +186,15 @@ bool UHonorProjectGameInstance::ServerConnect(const FString& IPString, const FSt
 
 void UHonorProjectGameInstance::CloseConnect()
 {
+	if (nullptr != m_RecvThread)
+	{
+		m_RecvThread->Close();
+	}
+	
 	if (nullptr == m_ClientSocket)
+	{
 		return;
+	}
 
 	m_ClientSocket->Close();
 	m_ClientSocket = nullptr;

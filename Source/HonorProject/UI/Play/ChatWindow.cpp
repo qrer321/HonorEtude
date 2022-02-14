@@ -31,8 +31,7 @@ void UChatWindow::SendChat(FString Text, ETextCommit::Type CommitType)
 	ChatMessageObject->SetID(GameInstance->m_UserID);
 	ChatMessageObject->SetMessage(Text);
 
-	m_MessageListView->AddItem(ChatMessageObject);
-
+	AddMessage(ChatMessageObject);
 	
 	ChatMessage Message;
 
@@ -83,6 +82,7 @@ void UChatWindow::AddNewMessage(UObject* Object, UUserWidget* UserWidget)
 void UChatWindow::AddMessage(UChatMessageObject* ChatMessageObject)
 {
 	m_MessageListView->AddItem(ChatMessageObject);
+	m_MessageListView->SetScrollOffset(m_MessageListView->GetNumItems() * 50.f);
 }
 
 void UChatWindow::AddMessage(const FString& ID, const FString& Message)

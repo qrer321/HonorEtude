@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "../../Global/GameInfo.h"
+#include "HonorProject/Global/GameInfo.h"
 #include "HonorProject/Global/HonorProjectGameInstance.h"
 #include "../Messages.h"
 
