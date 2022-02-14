@@ -98,7 +98,6 @@ private:
 public:
 	virtual void Init() override;
 	virtual void BeginDestroy() override;
-	virtual void FinishDestroy() override;
 	const FCharacterTableInfo* FindCharacterInfo(const FString& Name) const;
 
 public:

@@ -115,13 +115,6 @@ void UHonorProjectGameInstance::BeginDestroy()
 	CloseConnect();
 }
 
-void UHonorProjectGameInstance::FinishDestroy()
-{
-	Super::FinishDestroy();
-
-	CloseConnect();
-}
-
 const FCharacterTableInfo* UHonorProjectGameInstance::FindCharacterInfo(const FString& Name) const
 {
 	return m_CharacterInfoTable->FindRow<FCharacterTableInfo>(*Name, "");
