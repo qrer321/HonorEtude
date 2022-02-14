@@ -4,9 +4,6 @@
 
 #include "../Global/GameInfo.h"
 #include "HonorProjectCharacter.h"
-#include "GameFramework/Character.h"
-#include "CharacterController.h"
-#include "CharacterAnimInstance.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -33,42 +30,20 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* m_SMSword;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Controller, meta = (AllowPrivateAccess = "true"))
-	ACharacterController* m_CharacterController;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
-	UCharacterAnimInstance* m_AnimInstance;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
-	UAnimMontage* m_EquipAnimMontage;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
-	UAnimMontage* m_AttackUpMontage;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
-	UAnimMontage* m_AttackLeftMontage;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
-	UAnimMontage* m_AttackRightMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
-	bool m_IsCombatMode;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	class AMasterAICharacter* m_ClosestEnemy;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	float m_ClosestEnemyDistance;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TArray<AMasterAICharacter*> m_AlreadyDamagedEnemyArray;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"), Replicated)
-	EAttackDirection m_AttackDirection;
+	
 
 	FTimerHandle m_DetectAttackDirectionTimer;
-	FTimerHandle m_ControllerYawTimer;
 	FTimerHandle m_AttackTraceTimer;
+	FTimerHandle m_ControllerYawTimer;
 
 protected:
 	virtual void BeginPlay() override;
@@ -77,53 +52,29 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 public:
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void Server_IsCombatMode(bool IsCombatMode, bool UseOrientRotation, bool UseControllerDesiredRotation, float MaxWalkSpeed, FName SectionName = NAME_None);
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void MultiCast_IsCombatMode(bool IsCombatMode, bool UseOrientRotation, bool UseControllerDesiredRotation, float MaxWalkSpeed, FName SectionName = NAME_None);
-
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void Server_PlayMontage(UAnimMontage* AnimMontage, float InPlayRate = 1.f, FName StartSocketName = NAME_None);
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void MultiCast_PlayMontage(UAnimMontage* AnimMontage, float InPlayRate = 1.f, FName StartSocketName = NAME_None);
-
-	UFUNCTION(Server, Reliable)
-	void Server_SetAttackDirection(EAttackDirection AttackDirection);
-	UFUNCTION(NetMulticast, Reliable)
-	void MultiCast_SetAttackDirection(EAttackDirection AttackDirection);
-
-	UFUNCTION(Server, Reliable)
-	void Server_Attack();
-	UFUNCTION(NetMulticast, Reliable)
-	void MultiCast_Attack();
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	virtual void Client_FindClosestEnemy() override;
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void Client_FindClosestEnemy();
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void Client_ReticleVisibility();
+	virtual void Client_ReticleVisibility() override;
 
 public:
 	UFUNCTION(BlueprintCallable)
-	bool IsCombatMode() const { return m_IsCombatMode; }
-
-	UFUNCTION(BlueprintCallable)
 	UStaticMeshComponent* GetWeaponMeshComponent() const { return m_SMSword; }
-
-	UFUNCTION(BlueprintCallable)
-	EAttackDirection GetAttackDirection() const { return m_AttackDirection; }
 
 public:
 	void RotateToTarget();
 	void CombatCameraSwitch();
 	
 	void SetDetectAttackDirectionTimer();
-	void SetControllerYawTimer(float AnimMontageLength);
 	void SetAttackTraceTimer(bool SetTimer);
+	virtual void SetControllerYawTimer(float MontageLength) override;
+	virtual void SetCombatOffDelayTimer(float MontageLength) override;
 	
 	void DetectAttackDirection();
-	void ResetControllerYaw();
 	void AttackTrace();
+	void ResetControllerYaw();
+	void CombatOffDelay();
 
 protected:
 	void PressedLockOn();
