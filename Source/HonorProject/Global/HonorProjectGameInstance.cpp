@@ -9,7 +9,7 @@
 #include "Interfaces/IPv4/IPv4Endpoint.h"
 #include "../Message/MessageConverter.h"
 
-ClientRecvThread::ClientRecvThread(FSocket* RecvSocket, TQueue<TSharedPtr<GameServerMessage>>* MessageQueue)
+ClientRecvThread::ClientRecvThread(FSocket* RecvSocket, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue)
 {
 	if (nullptr == RecvSocket)
 	{
@@ -31,11 +31,11 @@ uint32 ClientRecvThread::Run()
 
 	while (true)
 	{
-		TArray<uint8> RecvData;
-		RecvData.SetNum(1024);
+		std::vector<uint8> RecvData;
+		RecvData.resize(1024);
 		
 		int32 RecvDataSize = 0;
-		if (false == m_RecvSocket->Recv(RecvData.GetData(), RecvData.Num(), RecvDataSize))
+		if (false == m_RecvSocket->Recv(&RecvData[0], RecvData.size(), RecvDataSize))
 		{
 			break;
 		}
@@ -151,9 +151,9 @@ void UHonorProjectGameInstance::CloseConnect()
 	m_ClientSocket = nullptr;
 }
 
-bool UHonorProjectGameInstance::Send(const TArray<uint8>& Data)
+bool UHonorProjectGameInstance::Send(const std::vector<uint8>& Data)
 {
-	if (0 == Data.Num())
+	if (0 == Data.size())
 	{
 		return false;
 	}
@@ -164,5 +164,5 @@ bool UHonorProjectGameInstance::Send(const TArray<uint8>& Data)
 	}
 
 	int32 DataSendSize = 0;
-	return m_ClientSocket->Send(Data.GetData(), Data.Num(), DataSendSize);
+	return m_ClientSocket->Send(&Data[0], Data.size(), DataSendSize);
 }

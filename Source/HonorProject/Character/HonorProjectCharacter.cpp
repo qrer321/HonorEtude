@@ -9,13 +9,39 @@ AHonorProjectCharacter::AHonorProjectCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> EquipAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Equip_Montage.GreatSword_Equip_Montage'"));
+	if (EquipAsset.Succeeded())
+		m_EquipAnimMontage = EquipAsset.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackUpAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Attack_Up_Montage.GreatSword_Attack_Up_Montage'"));
+	if (AttackUpAsset.Succeeded())
+		m_AttackUpMontage = AttackUpAsset.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackLeftAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Attack_Left_Montage.GreatSword_Attack_Left_Montage'"));
+	if (AttackLeftAsset.Succeeded())
+		m_AttackLeftMontage = AttackLeftAsset.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackRightAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Attack_Right_Montage.GreatSword_Attack_Right_Montage'"));
+	if (AttackRightAsset.Succeeded())
+		m_AttackRightMontage = AttackRightAsset.Object;
 }
 
 // Called when the game starts or when spawned
 void AHonorProjectCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	m_CharacterController = Cast<ACharacterController>(GetWorld()->GetFirstPlayerController());
+	m_AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+	m_AttackDirection = EAttackDirection::None;
+
+	if (IsValid(m_CharacterController))
+	{
+		if (IsValid(m_CharacterController->GetPawn()))
+		{
+			m_CharacterController->GetPawn()->SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		}
+	}
 }
 
 // Called every frame
@@ -37,6 +63,191 @@ void AHonorProjectCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AHonorProjectCharacter, m_CharacterInfo);
+	DOREPLIFETIME(AHonorProjectCharacter, m_IsCombatMode);
+	DOREPLIFETIME(AHonorProjectCharacter, m_AttackDirection);
+}
+
+/*
+ * RunonServer로 설정된 Server_IsCombatMode( ) 함수를 호출하면
+ * NetMulticast로 설정된 MultiCast_IsCombatMode( ) 함수를 호출하게 된다.
+ *
+ * 전체적인 흐름으로는 클라이언트 A가 Server 함수를 호출하면
+ * 해당 Server 함수가 서버에서 MultiCast 함수를 호출하게 되고
+ * 서버와 클라이언트 B를 포함한 다른 모든 클라이언트에서 B 함수가 호출된다.
+ */
+void AHonorProjectCharacter::Server_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation,
+                                                                bool UseControllerDesiredRotation, float MaxWalkSpeed,
+                                                                FName StartSectionName)
+{
+	// Delay Timer가 설정되어 있다면 return
+	if (true == GetWorldTimerManager().IsTimerActive(m_CombatOffDelayTimer))
+	{
+		return;
+	}
+	
+	MultiCast_IsCombatMode(IsCombatMode, UseOrientRotation, UseControllerDesiredRotation, MaxWalkSpeed);
+
+	Client_FindClosestEnemy();
+	Client_ReticleVisibility();
+	Server_PlayMontage(m_EquipAnimMontage, 1.f, StartSectionName);
+}
+
+void AHonorProjectCharacter::MultiCast_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation,
+	bool UseControllerDesiredRotation, float MaxWalkSpeed)
+{
+	m_IsCombatMode = IsCombatMode;
+	
+	GetCharacterMovement()->bOrientRotationToMovement = UseOrientRotation;
+	GetCharacterMovement()->bUseControllerDesiredRotation = UseControllerDesiredRotation;
+	GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
+}
+
+void AHonorProjectCharacter::Server_PlayMontage_Implementation(UAnimMontage* AnimMontage, float InPlayRate, FName StartSectionName)
+{
+	MultiCast_PlayMontage(AnimMontage, InPlayRate, StartSectionName);
+}
+
+void AHonorProjectCharacter::MultiCast_PlayMontage_Implementation(UAnimMontage* AnimMontage, float InPlayRate, FName StartSectionName)
+{
+	if (false == IsValid(m_AnimInstance))
+	{
+		PrintViewport(3.f, FColor::Red, TEXT("AnimInstance Is Not Valid"));
+		PrintViewport(3.f, FColor::Red, TEXT("MultiCast_PlayMontage_Implementation"));
+		return;
+	}
+
+	if (false == IsValid(AnimMontage))
+	{
+		PrintViewport(3.f, FColor::Red, TEXT("AnimMontage Is Not Valid"));
+		PrintViewport(3.f, FColor::Red, TEXT("MultiCast_PlayMontage_Implementation"));
+		return;
+	}
+
+	// StartSectionName이 Name_None인 경우...AnimMontage에 하나의 AnimSequence만 있는 경우
+	// StartSectionName이 Name_None이 아니면서 같은 Section을 반복재생하는 AnimMontage가 없다고 가정하고 함수 구성
+	if (true == StartSectionName.IsNone())
+	{
+		PlayAnimMontage(AnimMontage, InPlayRate);
+		return;
+	}
+	
+	const UAnimMontage* CurrentAnimMontage = m_AnimInstance->GetCurrentActiveMontage();
+	if (false == IsValid(CurrentAnimMontage))
+	{
+		m_AnimInstance->Montage_Play(AnimMontage, InPlayRate);
+		m_AnimInstance->Montage_JumpToSection(StartSectionName, AnimMontage);
+		return;
+	}
+
+	if (CurrentAnimMontage != AnimMontage)
+	{
+		m_AnimInstance->Montage_Play(AnimMontage, InPlayRate);
+		m_AnimInstance->Montage_JumpToSection(StartSectionName, AnimMontage);
+		return;
+	}
+	
+	/*
+	 * Equip / UnEquip과 같이 연관되어 있는 AnimMontage의 경우
+	 * 동작을 반복 실행했을 때 처음부터 애니메이션이 실행되는 것이 아닌
+	 * 이전 Section의 진행된 길이만큼 현재 재생될 Animation Section
+	 * 길이에서 뺀 위치에서 실행되도록 설정
+	 */
+	const float CurrentMontagePosition = m_AnimInstance->Montage_GetPosition(CurrentAnimMontage);
+	const int32 CurrentSectionIndex = CurrentAnimMontage->GetSectionIndexFromPosition(CurrentMontagePosition);
+	float CurrentSectionStartTime = 0.f, CurrentSectionEndTime = 0.f;
+	CurrentAnimMontage->GetSectionStartAndEndTime(CurrentSectionIndex, CurrentSectionStartTime, CurrentSectionEndTime);
+	
+	const int32 NextSectionIndex = AnimMontage->GetSectionIndex(StartSectionName);
+	float NextSectionStartTime = 0.f, NextSectionEndTime = 0.f;
+	AnimMontage->GetSectionStartAndEndTime(NextSectionIndex, NextSectionStartTime, NextSectionEndTime);
+
+	// 다른 Section의 진행 시간만큼을 빼고 재생되어야 할 현재 Montage Section의 시작 위치
+	const float ModifiedSectionTime = CurrentMontagePosition - CurrentSectionStartTime;
+	const float JumpSectionTime = NextSectionEndTime - ModifiedSectionTime;
+
+	m_AnimInstance->Montage_Play(AnimMontage, InPlayRate, EMontagePlayReturnType::MontageLength, JumpSectionTime - 0.3f);
+}
+
+/*
+ * 각각의 클라이언트가 가지고 있는 AttackDirection을 서버에 전송하여
+ * 모든 클라이언트가 다른 클라이언트의 AttackDirection을 알도록 만든다
+ */
+void AHonorProjectCharacter::Server_SetAttackDirection_Implementation(EAttackDirection AttackDirection)
+{
+	MultiCast_SetAttackDirection(AttackDirection);
+}
+
+void AHonorProjectCharacter::MultiCast_SetAttackDirection_Implementation(EAttackDirection AttackDirection)
+{
+	m_AttackDirection = AttackDirection;
+
+	if (IsValid(m_CharacterController))
+	{
+		const UMainHUD* MainHUD = m_CharacterController->GetMainHUD();
+		if (IsValid(MainHUD))
+			MainHUD->SetAttackReticleOpacity(m_AttackDirection);		
+	}
+}
+
+/*
+ * 서버에 저장되고 있는 AttackDirection에 따라서
+ * 각각 다른 애니메이션 몽타주를 재생한다
+ * 한 방향에 따른 콤보 애니메이션이 추가된다면
+ * StartSocketName 인자를 활용하게 만든다
+ */
+void AHonorProjectCharacter::Server_Attack_Implementation()
+{
+	MultiCast_Attack();
+}
+
+void AHonorProjectCharacter::MultiCast_Attack_Implementation()
+{
+	if (m_EquipAnimMontage == GetCurrentMontage())
+	{
+		return;
+	}
+
+	if (true == GetWorldTimerManager().IsTimerActive(m_CombatOffDelayTimer))
+	{
+		const float RemainTime = GetWorldTimerManager().GetTimerRemaining(m_CombatOffDelayTimer);
+		if (1.f < RemainTime)
+		{
+			// 버그성 연속 공격을 막도록
+			// CombatOffDelayTimer가 설정되어 있다면 강제 return
+			return;
+		}		
+	}
+	
+	
+	UAnimMontage* AnimMontage = nullptr;
+	
+	EAttackDirection AttackDirection = GetAttackDirection();
+	switch (static_cast<uint8>(AttackDirection))
+	{
+	case EAttackDirection::Up:
+		AnimMontage = m_AttackUpMontage;
+		break;
+	case EAttackDirection::Left:
+		AnimMontage = m_AttackLeftMontage;
+		break;
+	case EAttackDirection::Right:
+		AnimMontage = m_AttackRightMontage;
+		break;
+	default:
+		break;
+	}
+
+	if (false == IsValid(AnimMontage))
+	{
+		return;
+	}
+
+	bUseControllerRotationYaw = true;
+	Server_PlayMontage(AnimMontage);
+	
+	const float MontageLength = AnimMontage->GetPlayLength() - AnimMontage->BlendOut.GetBlendTime();
+	SetControllerYawTimer(MontageLength);
+	SetCombatOffDelayTimer(MontageLength);
 }
 
 float AHonorProjectCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,

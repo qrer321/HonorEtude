@@ -17,4 +17,7 @@ public:
 	static bool FStringToUTF8(const FString& String, std::string& UTF8);
 	static bool StringToData(const std::string& UTF8, std::vector<uint8> Data);
 	static bool FStringToUTF8Data(const FString& String, std::vector<uint8> Data);
+
+	static bool UTF8ToFString(const std::string& UTF8, FString& String);
+	static FString UTF8ToFString(const std::string& UTF8);
 };

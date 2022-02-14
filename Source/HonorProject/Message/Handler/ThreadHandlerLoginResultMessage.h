@@ -1,17 +1,18 @@
 ﻿#pragma once
 #include "../../Global/GameInfo.h"
 #include "HonorProject/Global/HonorProjectGameInstance.h"
+#include "../Messages.h"
 
 class HONORPROJECT_API ThreadHandlerLoginResultMessage
 {
 private:
-	UWorld*							m_World;
-	UHonorProjectGameInstance*		m_GameInstance;
-	TSharedPtr<LoginResultMessage>	m_LoginResultMessage;
+	UWorld*								m_World;
+	UHonorProjectGameInstance*			m_GameInstance;
+	std::shared_ptr<LoginResultMessage>	m_LoginResultMessage;
 
 	public: // Default
 	ThreadHandlerLoginResultMessage() = delete;
-	explicit ThreadHandlerLoginResultMessage(TSharedPtr<LoginResultMessage> ResultMessage);
+	explicit ThreadHandlerLoginResultMessage(std::shared_ptr<LoginResultMessage> ResultMessage);
 	~ThreadHandlerLoginResultMessage() = default;
 
 	ThreadHandlerLoginResultMessage(const ThreadHandlerLoginResultMessage& Other) = delete;

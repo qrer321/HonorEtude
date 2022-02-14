@@ -20,9 +20,14 @@ public:
 	UListView* m_MessageListView;
 
 public:
+	virtual void NativeConstruct() override;
+	
 	UFUNCTION(BlueprintCallable, Category = Chat)
-	void SendChat(FString ChatMessage, ETextCommit::Type CommitType);
+	void SendChat(FString Text, ETextCommit::Type CommitType);
 
 	UFUNCTION(BlueprintCallable, Category = Chat)
 	void AddNewMessage(UObject* Object, UUserWidget* UserWidget);
+
+	void AddMessage(class UChatMessageObject* ChatMessageObject);
+	void AddMessage(const FString& ID, const FString& Message);
 };

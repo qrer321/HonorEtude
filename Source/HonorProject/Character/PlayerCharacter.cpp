@@ -50,40 +50,11 @@ APlayerCharacter::APlayerCharacter()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SMSwordAsset(TEXT("StaticMesh'/Game/GKnight/Meshes/Weapon/SM_WP_GothicKnight_Sword.SM_WP_GothicKnight_Sword'"));
 	if (SMSwordAsset.Succeeded())
 		m_SMSword->SetStaticMesh(SMSwordAsset.Object);
-
-
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> EquipAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Equip_Montage.GreatSword_Equip_Montage'"));
-	if (EquipAsset.Succeeded())
-		m_EquipAnimMontage = EquipAsset.Object;
-
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackUpAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Attack_Up_Montage.GreatSword_Attack_Up_Montage'"));
-	if (AttackUpAsset.Succeeded())
-		m_AttackUpMontage = AttackUpAsset.Object;
-
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackLeftAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Attack_Left_Montage.GreatSword_Attack_Left_Montage'"));
-	if (AttackLeftAsset.Succeeded())
-		m_AttackLeftMontage = AttackLeftAsset.Object;
-
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackRightAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Attack_Right_Montage.GreatSword_Attack_Right_Montage'"));
-	if (AttackRightAsset.Succeeded())
-		m_AttackRightMontage = AttackRightAsset.Object;
 }
 
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	m_CharacterController = Cast<ACharacterController>(GetController());
-	m_AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
-	m_AttackDirection = EAttackDirection::None;
-
-	if (IsValid(m_CharacterController))
-	{
-		if (IsValid(m_CharacterController->GetPawn()))
-		{
-			m_CharacterController->GetPawn()->SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		}
-	}
 
 	const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
 	m_SMSword->AttachToComponent(GetMesh(), rules, TEXT("S_Unequip"));
@@ -126,6 +97,7 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	PlayerInputComponent->BindAction("LockOn", IE_Released, this, &APlayerCharacter::ReleasedLockOn);
 	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &APlayerCharacter::PressedAttack);
 
+	PlayerInputComponent->BindAxis("LockOnValue");
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
 
@@ -139,125 +111,6 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	//DOREPLIFETIME_CONDITION(AHonorProjectCharacter, m_IsCombatMode, COND_SkipOwner);
-	DOREPLIFETIME(APlayerCharacter, m_IsCombatMode);
-	DOREPLIFETIME(APlayerCharacter, m_ClosestEnemyDistance);
-	DOREPLIFETIME(APlayerCharacter, m_ClosestEnemy);
-	DOREPLIFETIME(APlayerCharacter, m_AlreadyDamagedEnemyArray);
-	DOREPLIFETIME(APlayerCharacter, m_AttackDirection);
-}
-
-/*
- * RunonServer로 설정된 Server_IsCombatMode( ) 함수를 호출하면
- * NetMulticast로 설정된 Client_IsCombatMode( ) 함수를 호출하게 된다.
- *
- * 전체적인 흐름으로는 클라이언트 A가 Server 함수를 호출하면
- * 해당 Server 함수가 서버에서 Client 함수를 호출하게 되고
- * 서버와 클라이언트 B를 포함한 다른 모든 클라이언트에서 B 함수가 호출된다.
- */
-void APlayerCharacter::Server_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation,
-                                                                bool UseControllerDesiredRotation, float MaxWalkSpeed,
-                                                                FName SectionName)
-{
-	MultiCast_IsCombatMode(IsCombatMode, UseOrientRotation, UseControllerDesiredRotation, MaxWalkSpeed, SectionName);
-
-	if (true == IsCombatMode)
-	{
-		Client_FindClosestEnemy();
-	}
-	else
-	{
-		if (IsValid(m_ClosestEnemy))
-		{
-			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
-			m_ClosestEnemy = nullptr;
-		}
-	}
-	
-	Client_ReticleVisibility();
-	Server_PlayMontage(m_EquipAnimMontage, 1.f, SectionName);
-}
-
-void APlayerCharacter::MultiCast_IsCombatMode_Implementation(bool IsCombatMode, bool UseOrientRotation,
-	bool UseControllerDesiredRotation, float MaxWalkSpeed, FName SectionName)
-{
-	m_IsCombatMode = IsCombatMode;
-	
-	GetCharacterMovement()->bOrientRotationToMovement = UseOrientRotation;
-	GetCharacterMovement()->bUseControllerDesiredRotation = UseControllerDesiredRotation;
-	GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
-}
-
-void APlayerCharacter::Server_PlayMontage_Implementation(UAnimMontage* AnimMontage, float InPlayRate, FName StartSocketName)
-{
-	MultiCast_PlayMontage(AnimMontage, InPlayRate, StartSocketName);
-}
-
-void APlayerCharacter::MultiCast_PlayMontage_Implementation(UAnimMontage* AnimMontage, float InPlayRate, FName StartSocketName)
-{
-	PlayAnimMontage(AnimMontage, InPlayRate, StartSocketName);
-}
-
-/*
- * 각각의 클라이언트가 가지고 있는 AttackDirection을 서버에 전송하여
- * 모든 클라이언트가 다른 클라이언트의 AttackDirection을 알도록 만든다
- */
-void APlayerCharacter::Server_SetAttackDirection_Implementation(EAttackDirection AttackDirection)
-{
-	MultiCast_SetAttackDirection(AttackDirection);
-}
-
-void APlayerCharacter::MultiCast_SetAttackDirection_Implementation(EAttackDirection AttackDirection)
-{
-	m_AttackDirection = AttackDirection;
-
-	if (IsValid(m_CharacterController))
-	{
-		const UMainHUD* MainHUD = m_CharacterController->GetMainHUD();
-		if (IsValid(MainHUD))
-			MainHUD->SetAttackReticleOpacity(m_AttackDirection);		
-	}
-}
-
-/*
- * 서버에 저장되고 있는 AttackDirection에 따라서
- * 각각 다른 애니메이션 몽타주를 재생한다
- * 한 방향에 따른 콤보 애니메이션이 추가된다면
- * StartSocketName 인자를 활용하게 만든다
- */
-void APlayerCharacter::Server_Attack_Implementation()
-{
-	MultiCast_Attack();
-}
-
-void APlayerCharacter::MultiCast_Attack_Implementation()
-{
-	UAnimMontage* AnimMontage = nullptr;
-	
-	EAttackDirection AttackDirection = GetAttackDirection();
-	switch (static_cast<uint8>(AttackDirection))
-	{
-	case EAttackDirection::Up:
-		AnimMontage = m_AttackUpMontage;
-		break;
-	case EAttackDirection::Left:
-		AnimMontage = m_AttackLeftMontage;
-		break;
-	case EAttackDirection::Right:
-		AnimMontage = m_AttackRightMontage;
-		break;
-	default:
-		break;
-	}
-
-	bUseControllerRotationYaw = true;
-	Server_PlayMontage(AnimMontage, 1.f, NAME_None);
-	UAnimMontage* CurrentMontage = GetCurrentMontage();
-	if (IsValid(CurrentMontage))
-	{
-		const float AnimLength = CurrentMontage->GetPlayLength();
-		SetControllerYawTimer(AnimLength);
-	}
 }
 
 /*
@@ -274,6 +127,17 @@ void APlayerCharacter::MultiCast_Attack_Implementation()
 */
 void APlayerCharacter::Client_FindClosestEnemy_Implementation()
 {
+	if (false == IsCombatMode())
+	{
+		if (IsValid(m_ClosestEnemy))
+		{
+			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
+			m_ClosestEnemy = nullptr;
+		}
+
+		return;
+	}
+
 	m_ClosestEnemyDistance = TNumericLimits<float>::Max();
 
 	TArray<AActor*> AllEnemyActor;
@@ -288,6 +152,11 @@ void APlayerCharacter::Client_FindClosestEnemy_Implementation()
 			m_ClosestEnemy = Cast<AMasterAICharacter>(actor);
 			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
 		}
+	}
+
+	if (false == IsValid(m_ClosestEnemy))
+	{
+		return;
 	}
 
 	m_ClosestEnemy->GetTargetDecal()->SetVisibility(true);
@@ -333,7 +202,7 @@ void APlayerCharacter::RotateToTarget()
 	// 현재 Actor의 회전 값에서 Target을 바라볼 회전값의 차를 보간한다
 	const FRotator DesiredRotation = UKismetMathLibrary::RInterpTo(CurrentRotation, ToTargetRotation, GetWorld()->GetDeltaSeconds(), 5.f);
 
-	GetController()->SetControlRotation(DesiredRotation);
+	m_CharacterController->SetControlRotation(DesiredRotation);
 }
 
 void APlayerCharacter::CombatCameraSwitch()
@@ -409,9 +278,14 @@ void APlayerCharacter::SetDetectAttackDirectionTimer()
 	                                true);
 }
 
-void APlayerCharacter::SetControllerYawTimer(float AnimMontageLength)
+void APlayerCharacter::SetControllerYawTimer(float MontageLength)
 {
-	GetWorldTimerManager().SetTimer(m_ControllerYawTimer, this, &APlayerCharacter::ResetControllerYaw, AnimMontageLength, false);
+	GetWorldTimerManager().SetTimer(m_ControllerYawTimer, this, &APlayerCharacter::ResetControllerYaw, MontageLength, false);
+}
+
+void APlayerCharacter::SetCombatOffDelayTimer(float MontageLength)
+{
+	 GetWorldTimerManager().SetTimer(m_CombatOffDelayTimer, this, &APlayerCharacter::CombatOffDelay, MontageLength, false);
 }
 
 void APlayerCharacter::SetAttackTraceTimer(bool SetTimer)
@@ -463,7 +337,22 @@ void APlayerCharacter::DetectAttackDirection()
 
 void APlayerCharacter::ResetControllerYaw()
 {
+	GetWorldTimerManager().ClearTimer(m_ControllerYawTimer);
 	bUseControllerRotationYaw = false;
+}
+
+void APlayerCharacter::CombatOffDelay()
+{
+	GetWorldTimerManager().ClearTimer(m_CombatOffDelayTimer);
+	const float LockOnKeyValue = GetInputAxisValue(TEXT("LockOnValue"));
+	if (0.f != LockOnKeyValue)
+	{
+		const float TimerRate = GetWorldTimerManager().GetTimerRate(m_CombatOffDelayTimer);
+		GetWorldTimerManager().SetTimer(m_CombatOffDelayTimer, this, &APlayerCharacter::CombatOffDelay, TimerRate);
+		return;
+	}
+
+	ReleasedLockOn();
 }
 
 void APlayerCharacter::AttackTrace()

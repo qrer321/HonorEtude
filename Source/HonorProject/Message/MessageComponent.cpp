@@ -5,9 +5,9 @@
 #include "../Global/HonorProjectGameInstance.h"
 
 template <typename MessageHandler, typename MessageType>
-void OnMessageProcess(TSharedPtr<GameServerMessage> Message, UHonorProjectGameInstance* GameInstance, UWorld* World)
+void OnMessageProcess(std::shared_ptr<GameServerMessage> Message, UHonorProjectGameInstance* GameInstance, UWorld* World)
 {
-	TSharedPtr<MessageType> ConvertMessage = StaticCastSharedPtr<MessageType>(MoveTemp(Message));
+	std::shared_ptr<MessageType> ConvertMessage = std::static_pointer_cast<MessageType>(MoveTemp(Message));
 	if (nullptr == ConvertMessage)
 	{
 		return;
@@ -28,11 +28,18 @@ void UMessageComponent::BeginPlay()
 	Super::BeginPlay();
 
 	m_Dispatcher.AddHandler(MessageType::LoginResult,
-	                        [this](TSharedPtr<GameServerMessage> GameServerMessage)
+	                        [this](std::shared_ptr<GameServerMessage> GameServerMessage)
 	                        {
 		                        UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
 		                        OnMessageProcess<ThreadHandlerLoginResultMessage, LoginResultMessage>(MoveTemp(GameServerMessage), GameInstance, GetWorld());
 	                        });
+
+	m_Dispatcher.AddHandler(MessageType::Chat,
+							[this](std::shared_ptr<GameServerMessage> GameServerMessage)
+							{
+								UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+								OnMessageProcess<ThreadHandlerChatMessage, ChatMessage>(MoveTemp(GameServerMessage), GameInstance, GetWorld());
+							});
 }
 
 void UMessageComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -43,7 +50,7 @@ void UMessageComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	while (false == GameInstance->GetMessageQueue().IsEmpty())
 	{
-		TSharedPtr<GameServerMessage> ServerMessage;
+		std::shared_ptr<GameServerMessage> ServerMessage;
 		GameInstance->GetMessageQueue().Dequeue(ServerMessage);
 		if (nullptr == ServerMessage)
 		{

@@ -1,7 +1,6 @@
 ﻿#include "ThreadHandlerLoginResultMessage.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
 
-ThreadHandlerLoginResultMessage::ThreadHandlerLoginResultMessage(TSharedPtr<LoginResultMessage> ResultMessage)
+ThreadHandlerLoginResultMessage::ThreadHandlerLoginResultMessage(std::shared_ptr<LoginResultMessage> ResultMessage)
 	: m_World(nullptr)
 	, m_GameInstance(nullptr)
 	, m_LoginResultMessage(MoveTemp(ResultMessage))

@@ -1,8 +1,8 @@
 #include "Messages.h"
 
 /////////////////////////////// GameServerMessage ///////////////////////////////
-GameServerMessage::GameServerMessage(MessageType Type)
-	: m_Type(Type)
+GameServerMessage::GameServerMessage(MessageType type)
+	: m_Type(type)
 	, m_Size(-1)
 {
 }
@@ -12,33 +12,33 @@ int GameServerMessage::SizeCheck()
 	return -1;
 }
 
-unsigned int GameServerMessage::DataSizeCheck(const std::string& Value)
+unsigned int GameServerMessage::DataSizeCheck(const std::string& value)
 {
-	return 4 + static_cast<unsigned int>(Value.size());
+	return 4 + static_cast<unsigned int>(value.size());
 }
 
-template <typename Type>
-unsigned int GameServerMessage::DataSizeCheck(Type Value)
+template <typename DataType>
+unsigned int GameServerMessage::DataSizeCheck(DataType value)
 {
-	return sizeof(Value);
+	return sizeof(value);
 }
 
-void GameServerMessage::Serialize(GameServerSerializer& Serializer)
+void GameServerMessage::Serialize(GameServerSerializer& serializer)
 {
-	Serializer << static_cast<int>(m_Type);
-	Serializer << SizeCheck();
+	serializer << static_cast<int>(m_Type);
+	serializer << SizeCheck();
 }
 
-void GameServerMessage::Deserialize(GameServerSerializer& Deserializer)
+void GameServerMessage::Deserialize(GameServerSerializer& serializer)
 {
-	int Type;
-	Deserializer >> Type;
-	m_Type = static_cast<MessageType>(Type);
-	Deserializer >> m_Size;
+	int type;
+	serializer >> type;
+	m_Type = static_cast<MessageType>(type);
+	serializer >> m_Size;
 }
 
 
-/////////////////////////////// LoginPacket ///////////////////////////////
+/////////////////////////////// LoginMessage ///////////////////////////////
 LoginMessage::LoginMessage()
 	: GameServerMessage(MessageType::Login)
 {
@@ -49,22 +49,28 @@ int LoginMessage::SizeCheck()
 	return static_cast<int>(DataSizeCheck(m_ID) + DataSizeCheck(m_PW));
 }
 
-void LoginMessage::Serialize(GameServerSerializer& Serializer)
+void LoginMessage::Serialize(GameServerSerializer& serializer)
 {
-	GameServerMessage::Serialize(Serializer);
-	Serializer << m_ID;
-	Serializer << m_PW;
+	// 어떤 메시지인지 판별
+	// -> LoginMessage라는 Type 정보와 LoginMessage의 크기 정보를 Serialize 한다
+	GameServerMessage::Serialize(serializer);
+
+	// 이후 ID와 PW에 해당하는 string 정보를 Serialize 한다
+	serializer << m_ID;
+	serializer << m_PW;
 }
 
-void LoginMessage::Deserialize(GameServerSerializer& Deserializer)
+void LoginMessage::Deserialize(GameServerSerializer& serializer)
 {
-	GameServerMessage::Deserialize(Deserializer);
-	Deserializer >> m_ID;
-	Deserializer >> m_PW;
+	// serializer의 정보를 GameServerMessage의 m_Type과 m_Size에 등록
+	GameServerMessage::Deserialize(serializer);
+
+	serializer >> m_ID;
+	serializer >> m_PW;
 }
 
 
-/////////////////////////////// LoginResultPacket ///////////////////////////////
+/////////////////////////////// LoginResultMessage ///////////////////////////////
 LoginResultMessage::LoginResultMessage()
 	: GameServerMessage(MessageType::LoginResult)
 	, m_Code(EGameServerCode::MAX)
@@ -76,17 +82,43 @@ int LoginResultMessage::SizeCheck()
 	return static_cast<int>(DataSizeCheck(m_Code));
 }
 
-void LoginResultMessage::Serialize(GameServerSerializer& Serializer)
+void LoginResultMessage::Serialize(GameServerSerializer& serializer)
 {
-	GameServerMessage::Serialize(Serializer);
-	Serializer << static_cast<int>(m_Code);
+	GameServerMessage::Serialize(serializer);
+	serializer << static_cast<int>(m_Code);
 }
 
-void LoginResultMessage::Deserialize(GameServerSerializer& Deserializer)
+void LoginResultMessage::Deserialize(GameServerSerializer& serializer)
 {
-	GameServerMessage::Deserialize(Deserializer);
+	GameServerMessage::Deserialize(serializer);
 
-	int Value;
-	Deserializer >> Value;
-	m_Code = static_cast<EGameServerCode>(Value);
+	int value;
+	serializer >> value;
+	m_Code = static_cast<EGameServerCode>(value);
+}
+
+
+/////////////////////////////// ChatMessage ///////////////////////////////
+ChatMessage::ChatMessage()
+	: GameServerMessage(MessageType::Chat)
+{
+}
+
+int ChatMessage::SizeCheck()
+{
+	return static_cast<int>(DataSizeCheck(m_ID) + DataSizeCheck(m_Message));
+}
+
+void ChatMessage::Serialize(GameServerSerializer& serializer)
+{
+	GameServerMessage::Serialize(serializer);
+	serializer << m_ID;
+	serializer << m_Message;
+}
+
+void ChatMessage::Deserialize(GameServerSerializer& serializer)
+{
+	GameServerMessage::Deserialize(serializer);
+	serializer >> m_ID;
+	serializer >> m_Message;
 }

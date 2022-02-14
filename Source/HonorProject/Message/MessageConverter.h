@@ -2,26 +2,26 @@
 #include "Messages.h"
 #include <memory>
 
-class HONORPROJECT_API MessageConverter
+class MessageConverter
 {
 private:
-	const TArray<uint8>&			m_Buffer;
-	TSharedPtr<GameServerMessage>	m_Message;
+	const std::vector<unsigned char>&	m_Buffer;
+	std::shared_ptr<GameServerMessage>	m_Message;
 
 public: // Default
 	MessageConverter() = delete;
-	explicit MessageConverter(const TArray<uint8>& Buffer);
+	explicit MessageConverter(const std::vector<unsigned char>& buffer);
 	~MessageConverter() = default;
 
-	MessageConverter(const MessageConverter& Other) = delete;
-	MessageConverter(MessageConverter&& Other) noexcept;
+	MessageConverter(const MessageConverter& other) = delete;
+	MessageConverter(MessageConverter&& other) noexcept;
 
-	MessageConverter& operator=(const MessageConverter& Other) = delete;
-	MessageConverter& operator=(MessageConverter&& Other) = delete;
+	MessageConverter& operator=(const MessageConverter& other) = delete;
+	MessageConverter& operator=(MessageConverter&& other) = delete;
 
 public:
-	MessageType GetMessageID() const;
-	unsigned int GetMessageID_UINT() const;
-	TSharedPtr<GameServerMessage>& GetServerMessage();
+	[[nodiscard]] MessageType GetMessageType() const;
+	[[nodiscard]] uint32_t GetMessageType_UINT() const;
+	std::shared_ptr<GameServerMessage>& GetServerMessage();
 };
 
