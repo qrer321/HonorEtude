@@ -30,18 +30,9 @@ AHonorProjectCharacter::AHonorProjectCharacter()
 void AHonorProjectCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	m_CharacterController = Cast<ACharacterController>(GetWorld()->GetFirstPlayerController());
+	
 	m_AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 	m_AttackDirection = EAttackDirection::None;
-
-	if (IsValid(m_CharacterController))
-	{
-		if (IsValid(m_CharacterController->GetPawn()))
-		{
-			m_CharacterController->GetPawn()->SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		}
-	}
 }
 
 // Called every frame
@@ -111,15 +102,15 @@ void AHonorProjectCharacter::MultiCast_PlayMontage_Implementation(UAnimMontage* 
 {
 	if (false == IsValid(m_AnimInstance))
 	{
-		PrintViewport(3.f, FColor::Red, TEXT("AnimInstance Is Not Valid"));
-		PrintViewport(3.f, FColor::Red, TEXT("MultiCast_PlayMontage_Implementation"));
+		PrintViewport(10.f, FColor::Red, TEXT("AnimInstance Is Not Valid"));
+		PrintViewport(10.f, FColor::Red, TEXT("MultiCast_PlayMontage_Implementation"));
 		return;
 	}
 
 	if (false == IsValid(AnimMontage))
 	{
-		PrintViewport(3.f, FColor::Red, TEXT("AnimMontage Is Not Valid"));
-		PrintViewport(3.f, FColor::Red, TEXT("MultiCast_PlayMontage_Implementation"));
+		PrintViewport(10.f, FColor::Red, TEXT("AnimMontage Is Not Valid"));
+		PrintViewport(10.f, FColor::Red, TEXT("MultiCast_PlayMontage_Implementation"));
 		return;
 	}
 
@@ -145,7 +136,7 @@ void AHonorProjectCharacter::MultiCast_PlayMontage_Implementation(UAnimMontage* 
 		m_AnimInstance->Montage_JumpToSection(StartSectionName, AnimMontage);
 		return;
 	}
-	
+
 	/*
 	 * Equip / UnEquip과 같이 연관되어 있는 AnimMontage의 경우
 	 * 동작을 반복 실행했을 때 처음부터 애니메이션이 실행되는 것이 아닌
@@ -175,12 +166,17 @@ void AHonorProjectCharacter::MultiCast_PlayMontage_Implementation(UAnimMontage* 
 void AHonorProjectCharacter::Server_SetAttackDirection_Implementation(EAttackDirection AttackDirection)
 {
 	MultiCast_SetAttackDirection(AttackDirection);
+
+	Client_SetAttackReticle();
 }
 
 void AHonorProjectCharacter::MultiCast_SetAttackDirection_Implementation(EAttackDirection AttackDirection)
 {
 	m_AttackDirection = AttackDirection;
+}
 
+void AHonorProjectCharacter::Client_SetAttackReticle_Implementation()
+{
 	if (IsValid(m_CharacterController))
 	{
 		const UMainHUD* MainHUD = m_CharacterController->GetMainHUD();
@@ -250,8 +246,55 @@ void AHonorProjectCharacter::MultiCast_Attack_Implementation()
 	SetCombatOffDelayTimer(MontageLength);
 }
 
+void AHonorProjectCharacter::SetWeaponCheckTimer()
+{
+	GetWorldTimerManager().SetTimer(m_WeaponCheckTimer, this, &AHonorProjectCharacter::WeaponCheck, 0.1f);
+}
+
+/*
+ * Equip 혹은 UnEquip Section이 실행될 때
+ * 처음부터 Section이 실행되는 것이 아닌
+ * 이전에 실행한 Section의 최종 실행 프레임을 기반으로
+ * 다음번에 실행할 Section의 시작 프레임 위치를 조정해주었다.
+ *
+ * 이와 같이 설정했을 때 AnimNotify Function이 실행되지 못하고 넘어가게 되어
+ * 무기의 소켓위치가 이상할 때가 많아 현재 Section 위치를 확인하고
+ * Socket 위치가 올바르지 않다면 수정해주기 위한 함수이다.
+ */
+void AHonorProjectCharacter::WeaponCheck()
+{
+	if (false == IsValid(m_AnimInstance))
+	{
+		LOGSTRING(TEXT("AnimInstance Is Not Valid"));
+		return;
+	}
+	
+	UAnimMontage* CurrentAnimMontage = GetCurrentMontage();
+	if (false == IsValid(CurrentAnimMontage) || m_EquipAnimMontage != CurrentAnimMontage)
+	{
+		return;
+	}
+
+	const float CurrentMontagePosition = m_AnimInstance->Montage_GetPosition(CurrentAnimMontage);
+	const int32 CurrentSectionIndex = CurrentAnimMontage->GetSectionIndexFromPosition(CurrentMontagePosition);
+	const float CurrentSectionLength = CurrentAnimMontage->GetSectionLength(CurrentSectionIndex);
+	float CurrentSectionStartTime = 0.f, CurrentSectionEndTime = 0.f;
+	CurrentAnimMontage->GetSectionStartAndEndTime(CurrentSectionIndex, CurrentSectionStartTime, CurrentSectionEndTime);
+
+	// 현재 Section의 남은 길이를 퍼센트로 구한다.
+	const float CurrentSectionFriction = (CurrentSectionLength - (CurrentMontagePosition - CurrentSectionStartTime)) / CurrentSectionLength;
+	if (0.7f < CurrentSectionFriction)
+	{
+		// 남은 길이가 일정 위치를 넘어설 경우
+		if (false == IsCombatMode())
+		{
+			SetWeaponSocketLocation();
+		}
+	}
+}
+
 float AHonorProjectCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
-                                AActor* DamageCauser)
+                                         AActor* DamageCauser)
 {
 	float Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	

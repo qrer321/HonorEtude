@@ -56,6 +56,15 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	m_CharacterController = Cast<ACharacterController>(GetWorld()->GetFirstPlayerController());
+	if (IsValid(m_CharacterController))
+	{
+		if (IsValid(m_CharacterController->GetPawn()))
+		{
+			m_CharacterController->GetPawn()->SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		}
+	}
+	
 	const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
 	m_SMSword->AttachToComponent(GetMesh(), rules, TEXT("S_Unequip"));
 
@@ -110,7 +119,6 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
 }
 
 /*
@@ -265,7 +273,6 @@ void APlayerCharacter::SetDetectAttackDirectionTimer()
 	if (false == m_IsCombatMode)
 	{
 		// 다음번 LockOn을 위해 Reticle 알파값 초기화
-		//m_AttackDirection = EAttackDirection::None;
 		Server_SetAttackDirection(EAttackDirection::None);
 		const UMainHUD* MainHUD = m_CharacterController->GetMainHUD();
 		if (IsValid(MainHUD))
@@ -330,7 +337,6 @@ void APlayerCharacter::DetectAttackDirection()
 	// 공격 방향이 이전과 동일하지 않은 경우에만 Opacity 설정
 	if (AttackDirection != EAttackDirection::None && m_AttackDirection != AttackDirection)
 	{
-		//m_AttackDirection = AttackDirection;
 		Server_SetAttackDirection(AttackDirection);
 	}
 }
@@ -402,10 +408,10 @@ void APlayerCharacter::PressedLockOn()
 
 void APlayerCharacter::ReleasedLockOn()
 {
-	Server_IsCombatMode(false, true, false, 600.f, TEXT("Unequip"));
-
-	if (bUseControllerRotationYaw)
-		ResetControllerYaw();
+	// Server_IsCombatMode(false, true, false, 600.f, TEXT("Unequip"));
+	//
+	// if (bUseControllerRotationYaw)
+	// 	ResetControllerYaw();
 }
 
 void APlayerCharacter::PressedAttack()

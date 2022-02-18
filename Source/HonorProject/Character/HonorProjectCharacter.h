@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../Global/GameInfo.h"
+#include "HonorProject/Global/GameInfo.h"
 #include "GameFramework/Character.h"
 #include "CharacterController.h"
 #include "CharacterAnimInstance.h"
@@ -43,6 +43,7 @@ protected:
 
 	
 	FTimerHandle m_CombatOffDelayTimer;
+	FTimerHandle m_WeaponCheckTimer;
 
 public:
 	FCharacterInfo GetCharacterInfo() const { return m_CharacterInfo; }
@@ -85,6 +86,8 @@ public:
 	void Server_SetAttackDirection(EAttackDirection AttackDirection);
 	UFUNCTION(NetMulticast, Reliable)
 	void MultiCast_SetAttackDirection(EAttackDirection AttackDirection);
+	UFUNCTION(Client, Reliable)
+	void Client_SetAttackReticle();
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_Attack();
@@ -96,6 +99,10 @@ public:
 	virtual void Client_ReticleVisibility() {}
 	virtual void SetControllerYawTimer(float MontageLength) {}
 	virtual void SetCombatOffDelayTimer(float MontageLength) {}
+
+	void SetWeaponCheckTimer();
+	void WeaponCheck();
+	virtual void SetWeaponSocketLocation() {}
 
 public:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;

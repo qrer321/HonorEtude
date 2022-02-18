@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../Global/GameInfo.h"
+#include "HonorProject/Global/GameInfo.h"
 #include "Animation/AnimInstance.h"
 #include "CharacterAnimInstance.generated.h"
 
@@ -14,9 +14,9 @@ class HONORPROJECT_API UCharacterAnimInstance : public UAnimInstance
 public:
 	UCharacterAnimInstance();
 
-public:
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	class APlayerCharacter* m_PlayerCharacter;
+	class AHonorProjectCharacter* m_Character;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool m_IsinAir;
@@ -34,17 +34,4 @@ public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
-	
-public:
-	UFUNCTION()
-	void AnimNotify_Weapon_Equip();
-
-	UFUNCTION()
-	void AnimNotify_Weapon_Unequip();
-
-	UFUNCTION()
-	void AnimNotify_OnCollision_Start();
-
-	UFUNCTION()
-	void AnimNotify_OnCollision_End();
 };
