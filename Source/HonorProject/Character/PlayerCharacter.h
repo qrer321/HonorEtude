@@ -76,6 +76,8 @@ public:
 	void ResetControllerYaw();
 	void CombatOffDelay();
 
+	void SetWeaponSocketLocation_Implementation(FName SocketName) override;
+
 protected:
 	void PressedLockOn();
 	void ReleasedLockOn();

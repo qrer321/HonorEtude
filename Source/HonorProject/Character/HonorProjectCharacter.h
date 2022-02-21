@@ -102,7 +102,10 @@ public:
 
 	void SetWeaponCheckTimer();
 	void WeaponCheck();
-	virtual void SetWeaponSocketLocation() {}
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void SetWeaponSocketLocation(FName SocketName);
+	virtual void SetWeaponSocketLocation_Implementation(FName SocketName) {}
 
 public:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;

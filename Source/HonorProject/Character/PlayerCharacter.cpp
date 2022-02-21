@@ -361,6 +361,12 @@ void APlayerCharacter::CombatOffDelay()
 	ReleasedLockOn();
 }
 
+void APlayerCharacter::SetWeaponSocketLocation_Implementation(FName SocketName)
+{
+	const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
+	GetWeaponMeshComponent()->AttachToComponent(GetMesh(), rules, SocketName);
+}
+
 void APlayerCharacter::AttackTrace()
 {
 	const FQuat SwordQuat = m_SMSword->GetComponentRotation().Quaternion();
@@ -408,10 +414,10 @@ void APlayerCharacter::PressedLockOn()
 
 void APlayerCharacter::ReleasedLockOn()
 {
-	// Server_IsCombatMode(false, true, false, 600.f, TEXT("Unequip"));
-	//
-	// if (bUseControllerRotationYaw)
-	// 	ResetControllerYaw();
+	Server_IsCombatMode(false, true, false, 600.f, TEXT("Unequip"));
+	
+	if (bUseControllerRotationYaw)
+		ResetControllerYaw();
 }
 
 void APlayerCharacter::PressedAttack()

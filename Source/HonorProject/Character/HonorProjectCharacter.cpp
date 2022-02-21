@@ -91,6 +91,8 @@ void AHonorProjectCharacter::MultiCast_IsCombatMode_Implementation(bool IsCombat
 	GetCharacterMovement()->bOrientRotationToMovement = UseOrientRotation;
 	GetCharacterMovement()->bUseControllerDesiredRotation = UseControllerDesiredRotation;
 	GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
+
+	SetWeaponCheckTimer();
 }
 
 void AHonorProjectCharacter::Server_PlayMontage_Implementation(UAnimMontage* AnimMontage, float InPlayRate, FName StartSectionName)
@@ -156,7 +158,8 @@ void AHonorProjectCharacter::MultiCast_PlayMontage_Implementation(UAnimMontage* 
 	const float ModifiedSectionTime = CurrentMontagePosition - CurrentSectionStartTime;
 	const float JumpSectionTime = NextSectionEndTime - ModifiedSectionTime;
 
-	m_AnimInstance->Montage_Play(AnimMontage, InPlayRate, EMontagePlayReturnType::MontageLength, JumpSectionTime - 0.3f);
+
+	m_AnimInstance->Montage_Play(AnimMontage, InPlayRate, EMontagePlayReturnType::MontageLength, JumpSectionTime);
 }
 
 /*
@@ -248,7 +251,7 @@ void AHonorProjectCharacter::MultiCast_Attack_Implementation()
 
 void AHonorProjectCharacter::SetWeaponCheckTimer()
 {
-	GetWorldTimerManager().SetTimer(m_WeaponCheckTimer, this, &AHonorProjectCharacter::WeaponCheck, 0.1f);
+	GetWorldTimerManager().SetTimer(m_WeaponCheckTimer, this, &AHonorProjectCharacter::WeaponCheck, 0.1f, true);
 }
 
 /*
@@ -275,21 +278,22 @@ void AHonorProjectCharacter::WeaponCheck()
 		return;
 	}
 
-	const float CurrentMontagePosition = m_AnimInstance->Montage_GetPosition(CurrentAnimMontage);
-	const int32 CurrentSectionIndex = CurrentAnimMontage->GetSectionIndexFromPosition(CurrentMontagePosition);
-	const float CurrentSectionLength = CurrentAnimMontage->GetSectionLength(CurrentSectionIndex);
-	float CurrentSectionStartTime = 0.f, CurrentSectionEndTime = 0.f;
-	CurrentAnimMontage->GetSectionStartAndEndTime(CurrentSectionIndex, CurrentSectionStartTime, CurrentSectionEndTime);
-
-	// 현재 Section의 남은 길이를 퍼센트로 구한다.
-	const float CurrentSectionFriction = (CurrentSectionLength - (CurrentMontagePosition - CurrentSectionStartTime)) / CurrentSectionLength;
-	if (0.7f < CurrentSectionFriction)
+	const float CurrentSectionFriction = 1.f - m_AnimInstance->GetCurrentMontageRemainingFriction();
+	if (0.3f < CurrentSectionFriction)
 	{
 		// 남은 길이가 일정 위치를 넘어설 경우
-		if (false == IsCombatMode())
+		FName SocketName;
+		if (true == IsCombatMode())
 		{
-			SetWeaponSocketLocation();
+			SocketName = TEXT("S_Equip");
 		}
+		else if (false == IsCombatMode())
+		{
+			SocketName = TEXT("S_Unequip");
+		}
+
+		SetWeaponSocketLocation(SocketName);
+		GetWorldTimerManager().ClearTimer(m_WeaponCheckTimer);
 	}
 }
 

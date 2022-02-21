@@ -51,3 +51,25 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		m_IsCombatMode = m_Character->IsCombatMode();
 	}
 }
+
+/*
+ * Current Play Montage의 남은 시간을 비율로 구한다.
+ * AnimMontage 내부에 Section이 존재한다면 현재 Position을 통해
+ * 해당 Section의 남은 비율을 return 한다.
+ */
+float UCharacterAnimInstance::GetCurrentMontageRemainingFriction() const
+{
+	const UAnimMontage* CurrentAnimMontage = GetCurrentActiveMontage();
+	if (false == IsValid(CurrentAnimMontage))
+	{
+		return 0.f;
+	}
+	
+	const float CurrentMontagePosition = Montage_GetPosition(CurrentAnimMontage);
+	const int32 CurrentSectionIndex = CurrentAnimMontage->GetSectionIndexFromPosition(CurrentMontagePosition);
+	const float CurrentSectionLength = CurrentAnimMontage->GetSectionLength(CurrentSectionIndex);
+	float CurrentSectionStartTime = 0.f, CurrentSectionEndTime = 0.f;
+	CurrentAnimMontage->GetSectionStartAndEndTime(CurrentSectionIndex, CurrentSectionStartTime, CurrentSectionEndTime);
+
+	return (CurrentSectionLength - (CurrentMontagePosition - CurrentSectionStartTime)) / CurrentSectionLength;
+}
