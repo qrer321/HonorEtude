@@ -16,9 +16,23 @@ void UHealthHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	if (!IsValid(m_WidgetOwner))
+	if (false == IsValid(m_WidgetOwner))
+	{
 		return;
+	}
 	
 	const float Percent = UKismetMathLibrary::FInterpTo(m_HealthBack->Percent, m_HealthFront->Percent, InDeltaTime, 1.f);
 	m_HealthBack->SetPercent(Percent);
+}
+
+void UHealthHUD::SetHealthVisibility(bool Visible)
+{
+	if (true == Visible)
+	{
+		SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+	else if (false == Visible)
+	{
+		SetVisibility(ESlateVisibility::Collapsed);
+	}
 }

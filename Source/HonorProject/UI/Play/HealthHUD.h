@@ -25,6 +25,7 @@ private:
 public:
 	void SetHPPercent(const float Percent) const { m_HealthFront->SetPercent(Percent); }
 	void SetWidgetOwner(AHonorProjectCharacter* WidgetOwner) { m_WidgetOwner = WidgetOwner; }
+	void SetHealthVisibility(bool Visible);
 
 protected:
 	virtual void NativeConstruct() override;

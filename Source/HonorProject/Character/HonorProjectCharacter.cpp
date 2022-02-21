@@ -249,6 +249,16 @@ void AHonorProjectCharacter::MultiCast_Attack_Implementation()
 	SetCombatOffDelayTimer(MontageLength);
 }
 
+void AHonorProjectCharacter::Server_ApplyDamage_Implementation(AActor* DamagedActor, float BaseDamage, AController* EventInstigator, AActor* DamageCauser)
+{
+	MultiCast_ApplyDamage(DamagedActor, BaseDamage, EventInstigator, DamageCauser);
+}
+
+void AHonorProjectCharacter::MultiCast_ApplyDamage_Implementation(AActor* DamagedActor, float BaseDamage, AController* EventInstigator, AActor* DamageCauser)
+{
+	UGameplayStatics::ApplyDamage(DamagedActor, BaseDamage, EventInstigator, DamageCauser, nullptr);
+}
+
 void AHonorProjectCharacter::SetWeaponCheckTimer()
 {
 	GetWorldTimerManager().SetTimer(m_WeaponCheckTimer, this, &AHonorProjectCharacter::WeaponCheck, 0.1f, true);
@@ -300,10 +310,26 @@ void AHonorProjectCharacter::WeaponCheck()
 float AHonorProjectCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
                                          AActor* DamageCauser)
 {
+	if (false == IsLocallyControlled())
+	{
+		return 0.f;
+	}
+	
 	float Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	if (1.f > Damage)
+	{
+		return Damage;
+	}
 	
 	Damage = Damage - m_CharacterInfo.Armor;
 	Damage = Damage < 1.f ? 1.f : Damage;
+
+	MultiCast_TakeDamage(Damage);
 	
 	return Damage;
+}
+
+void AHonorProjectCharacter::MultiCast_TakeDamage_Implementation(float DamageAmount)
+{
+	m_CharacterInfo.HP -= DamageAmount;
 }

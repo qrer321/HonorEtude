@@ -32,27 +32,42 @@ void AMasterAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	m_HealthWidget = Cast<UHealthHUD>(m_HealthHUD->GetWidget());
-	m_HealthWidget->SetWidgetOwner(this);
-	
-	
 	const UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
-	if (IsValid(GameInstance))
+	if (false == IsValid(GameInstance))
 	{
-		const FCharacterTableInfo* CharacterInfo = GameInstance->FindCharacterInfo(TEXT("Player"));
-		if (CharacterInfo)
-		{
-			m_CharacterInfo.Name = CharacterInfo->Name;
-			m_CharacterInfo.Attack = CharacterInfo->Attack;
-			m_CharacterInfo.Armor = CharacterInfo->Armor;
-			m_CharacterInfo.HP = CharacterInfo->HP;
-			m_CharacterInfo.HPMax = CharacterInfo->HPMax;
-			m_CharacterInfo.SP = CharacterInfo->SP;
-			m_CharacterInfo.SPMax = CharacterInfo->SPMax;
-			m_CharacterInfo.SPRecoverMaxTime = CharacterInfo->SPRecoverMaxTime;
-			m_CharacterInfo.AttackSpeed = CharacterInfo->AttackSpeed;
-			m_CharacterInfo.MoveSpeed = CharacterInfo->MoveSpeed;
-		}
+		LOGSTRING(TEXT("GameInstance Is Not Valid"));
+		return;
+	}
+	
+	if (false == IsValid(m_HealthHUD))
+	{
+		LOGSTRING(TEXT("Helath HUD Is Not Valid"));
+		return;
+	}
+
+	m_HealthWidget = Cast<UHealthHUD>(m_HealthHUD->GetWidget());
+	if (false == IsValid(m_HealthWidget))
+	{
+		LOGSTRING(TEXT("Helath Widget Is Not Valid"));
+		return;
+	}
+	
+	m_HealthWidget->SetWidgetOwner(this);
+	//m_HealthWidget->SetHealthVisibility(false);
+
+	const FCharacterTableInfo* CharacterInfo = GameInstance->FindCharacterInfo(TEXT("Player"));
+	if (nullptr != CharacterInfo)
+	{
+		m_CharacterInfo.Name = CharacterInfo->Name;
+		m_CharacterInfo.Attack = CharacterInfo->Attack;
+		m_CharacterInfo.Armor = CharacterInfo->Armor;
+		m_CharacterInfo.HP = CharacterInfo->HP;
+		m_CharacterInfo.HPMax = CharacterInfo->HPMax;
+		m_CharacterInfo.SP = CharacterInfo->SP;
+		m_CharacterInfo.SPMax = CharacterInfo->SPMax;
+		m_CharacterInfo.SPRecoverMaxTime = CharacterInfo->SPRecoverMaxTime;
+		m_CharacterInfo.AttackSpeed = CharacterInfo->AttackSpeed;
+		m_CharacterInfo.MoveSpeed = CharacterInfo->MoveSpeed;
 	}
 }
 
@@ -81,8 +96,6 @@ float AMasterAICharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dam
 }
 void AMasterAICharacter::MultiCast_CalcDamage_Implementation(float DamageAmount)
 {
-	m_CharacterInfo.HP -= DamageAmount;
-
 	if (IsValid(m_HealthWidget))
 	{
 		m_HealthWidget->SetHPPercent(m_CharacterInfo.HP / static_cast<float>(m_CharacterInfo.HPMax));

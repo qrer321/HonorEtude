@@ -7,54 +7,102 @@
 
 void UPlayerAnimInstance::AnimNotify_Weapon_Equip()
 {
-	if (IsValid(m_Character))
+	if (false == IsValid(m_Character))
 	{
-		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(m_Character);
-
-		if (IsValid(PlayerCharacter))
-		{
-			const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
-			PlayerCharacter->GetWeaponMeshComponent()->AttachToComponent(PlayerCharacter->GetMesh(), rules, TEXT("S_Equip"));			
-		}
+		LOGSTRING(TEXT("Character Is Not Valid"));
+		return;
 	}
+
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(m_Character);
+	if (false == IsValid(PlayerCharacter))
+	{
+		LOGSTRING(TEXT("Cast PlayerCharacter Is Not Valid"))
+		return;
+	}
+
+	if (false == PlayerCharacter->IsLocallyControlled())
+	{
+		// Notify 함수를 호출한 캐릭터가
+		// 해당 클라이언트의 컨트롤이 아닌 경우 return
+		return;
+	}
+
+	const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
+	PlayerCharacter->GetWeaponMeshComponent()->AttachToComponent(PlayerCharacter->GetMesh(), rules, TEXT("S_Equip"));
 }
 
 void UPlayerAnimInstance::AnimNotify_Weapon_Unequip()
 {
-	if (IsValid(m_Character))
+	if (false == IsValid(m_Character))
 	{
-		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(m_Character);
-
-		if (IsValid(PlayerCharacter))
-		{
-			const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
-			PlayerCharacter->GetWeaponMeshComponent()->AttachToComponent(PlayerCharacter->GetMesh(), rules, TEXT("S_Unequip"));
-		}
+		LOGSTRING(TEXT("Character Is Not Valid"));
+		return;
 	}
+
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(m_Character);
+	if (false == IsValid(PlayerCharacter))
+	{
+		LOGSTRING(TEXT("Cast PlayerCharacter Is Not Valid"))
+		return;
+	}
+
+	if (false == PlayerCharacter->IsLocallyControlled())
+	{
+		// Notify 함수를 호출한 캐릭터가
+		// 해당 클라이언트의 컨트롤이 아닌 경우 return
+		return;
+	}
+
+	const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
+	PlayerCharacter->GetWeaponMeshComponent()->AttachToComponent(PlayerCharacter->GetMesh(), rules, TEXT("S_Unequip"));
 }
 
 void UPlayerAnimInstance::AnimNotify_OnCollision_Start()
 {
-	if (IsValid(m_Character))
+	if (false == IsValid(m_Character))
 	{
-		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(m_Character);
-
-		if (IsValid(PlayerCharacter))
-		{
-			PlayerCharacter->SetAttackTraceTimer(true);
-		}
+		LOGSTRING(TEXT("Character Is Not Valid"));
+		return;
 	}
+
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(m_Character);
+	if (false == IsValid(PlayerCharacter))
+	{
+		LOGSTRING(TEXT("Cast PlayerCharacter Is Not Valid"))
+		return;
+	}
+	
+	if (false == PlayerCharacter->IsLocallyControlled())
+	{
+		// Notify 함수를 호출한 캐릭터가
+		// 해당 클라이언트의 컨트롤이 아닌 경우 return
+		return;
+	}
+	
+	PlayerCharacter->SetAttackTraceTimer(true);
 }
 
 void UPlayerAnimInstance::AnimNotify_OnCollision_End()
 {
-	if (IsValid(m_Character))
+	if (false == IsValid(m_Character))
 	{
-		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(m_Character);
-
-		if (IsValid(PlayerCharacter))
-		{
-			PlayerCharacter->SetAttackTraceTimer(false);
-		}
+		LOGSTRING(TEXT("Character Is Not Valid"));
+		return;
 	}
+
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(m_Character);
+	if (false == IsValid(PlayerCharacter))
+	{
+		LOGSTRING(TEXT("Cast PlayerCharacter Is Not Valid"))
+		return;
+	}
+	
+	if (false == PlayerCharacter->IsLocallyControlled())
+	{
+		// Notify 함수를 호출한 캐릭터가
+		// 해당 클라이언트의 컨트롤이 아닌 경우 return
+		return;
+	}
+	
+	PlayerCharacter->SetAttackTraceTimer(false);
 }

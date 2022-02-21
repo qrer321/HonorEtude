@@ -177,7 +177,7 @@ void APlayerCharacter::Client_ReticleVisibility_Implementation()
 	if (m_IsCombatMode)
 		m_CharacterController->GetMainHUD()->SetAttackReticleVisibility(ESlateVisibility::HitTestInvisible);
 	else
-		m_CharacterController->GetMainHUD()->SetAttackReticleVisibility(ESlateVisibility::Hidden);
+		m_CharacterController->GetMainHUD()->SetAttackReticleVisibility(ESlateVisibility::Collapsed);
 }
 
 /*
@@ -367,7 +367,7 @@ void APlayerCharacter::SetWeaponSocketLocation_Implementation(FName SocketName)
 	GetWeaponMeshComponent()->AttachToComponent(GetMesh(), rules, SocketName);
 }
 
-void APlayerCharacter::AttackTrace()
+void APlayerCharacter::AttackTrace_Implementation()
 {
 	const FQuat SwordQuat = m_SMSword->GetComponentRotation().Quaternion();
 	const FVector SwordBottomLocation = m_SMSword->GetSocketLocation(TEXT("S_Bottom"));
@@ -393,17 +393,19 @@ void APlayerCharacter::AttackTrace()
 	for (const auto& HitResult : ResultArray)
 	{
 		AMasterAICharacter* HitActor = Cast<AMasterAICharacter>(HitResult.Actor);
-		if (IsValid(HitActor))
+		if (false == IsValid(HitActor))
 		{
-			// HitActor가 이미 공격당한 Enemy일 경우 무시
-			if (m_AlreadyDamagedEnemyArray.Contains(HitActor))
-				continue;
-			
-			m_AlreadyDamagedEnemyArray.Add(HitActor);
-			
-			FDamageEvent DamageEvent;
-			UGameplayStatics::ApplyDamage(HitActor, m_CharacterInfo.Attack, m_CharacterController, this, nullptr);
+			LOGSTRING("Hit Actor Is Not Valid");
+			continue;
 		}
+
+		if (true == m_AlreadyDamagedEnemyArray.Contains(HitActor))
+		{
+			continue;
+		}
+
+		m_AlreadyDamagedEnemyArray.Add(HitActor);
+		Server_ApplyDamage(HitActor, m_CharacterInfo.Attack, m_CharacterController, this);
 	}
 }
 

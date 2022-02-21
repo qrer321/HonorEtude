@@ -72,6 +72,8 @@ public:
 	virtual void SetCombatOffDelayTimer(float MontageLength) override;
 	
 	void DetectAttackDirection();
+
+	UFUNCTION(Client, Reliable)
 	void AttackTrace();
 	void ResetControllerYaw();
 	void CombatOffDelay();

@@ -94,6 +94,16 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MultiCast_Attack();
 
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void Server_ApplyDamage(AActor* DamagedActor, float BaseDamage, AController* EventInstigator, AActor* DamageCauser);
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiCast_ApplyDamage(AActor* DamagedActor, float BaseDamage, AController* EventInstigator, AActor* DamageCauser);
+
+
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiCast_TakeDamage(float DamageAmount);
+
 public:
 	virtual void Client_FindClosestEnemy() {}
 	virtual void Client_ReticleVisibility() {}
@@ -106,9 +116,4 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SetWeaponSocketLocation(FName SocketName);
 	virtual void SetWeaponSocketLocation_Implementation(FName SocketName) {}
-
-public:
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-
-
 };
