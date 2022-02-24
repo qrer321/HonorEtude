@@ -331,5 +331,9 @@ float AHonorProjectCharacter::TakeDamage(float DamageAmount, FDamageEvent const&
 
 void AHonorProjectCharacter::MultiCast_TakeDamage_Implementation(float DamageAmount)
 {
+	// m_CharacterInfo는 Replicated 했지만
+	// struct 내부 원소들까지 replicate 되는지는 확인할 수 없었다.
+	// 만약 서버에서 클라로 복사가 됐다고 하면 클라가 들고있는 CharacterInfo HP가 수정되어 있어야 하지만
+	// 그렇지 않았고, 함수 호출이 제대로 이루어지지 않아 당장 체력을 줄이는것은 MultiCast로 설정했다...
 	m_CharacterInfo.HP -= DamageAmount;
 }
