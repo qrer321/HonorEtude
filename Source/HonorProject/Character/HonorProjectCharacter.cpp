@@ -24,6 +24,8 @@ AHonorProjectCharacter::AHonorProjectCharacter()
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackRightAsset(TEXT("AnimMontage'/Game/HonorProejct/PlayRelevant/Character/AnimMontage/GreatSword_Attack_Right_Montage.GreatSword_Attack_Right_Montage'"));
 	if (AttackRightAsset.Succeeded())
 		m_AttackRightMontage = AttackRightAsset.Object;
+
+	m_MessageComponent = CreateDefaultSubobject<UObjectMessageComponent>(TEXT("Message Component"));
 }
 
 // Called when the game starts or when spawned

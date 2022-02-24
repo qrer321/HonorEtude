@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "../Global/GameInfo.h"
+#include "HonorProject//Global/GameInfo.h"
 #include "Components/ActorComponent.h"
-#include "Dispatcher.h"
+#include "HonorProject/Message/Dispatcher.h"
 #include "MessageComponent.generated.h"
 
 

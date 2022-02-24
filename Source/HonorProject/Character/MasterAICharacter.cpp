@@ -76,6 +76,22 @@ void AMasterAICharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// 서버 테스트용
+	while (false == GetObjectMessage()->IsEmpty())
+	{
+		std::shared_ptr<GameServerMessage> ServerMessage = GetObjectMessage()->Dequeue();
+		if (MessageType::AIUpdate == ServerMessage->GetType())
+		{
+			std::shared_ptr<AIUpdateMessage> UpdateMessage = std::static_pointer_cast<AIUpdateMessage>(ServerMessage);
+			if (nullptr == UpdateMessage)
+			{
+				continue;
+			}
+
+			SetActorLocation(UpdateMessage->m_Pos);
+		}
+	}
+
 }
 
 // Called to bind functionality to input

@@ -25,11 +25,11 @@ void ACharacterController::BeginPlay()
 
 	Server_AddMainHUDToViewport();
 
-	// FInputModeGameAndUI InputMode;
-	// InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
-	// InputMode.SetHideCursorDuringCapture(true);
-	//
-	// GetWorld()->GetFirstPlayerController()->SetInputMode(InputMode);
+	FInputModeGameAndUI InputMode;
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+	InputMode.SetHideCursorDuringCapture(true);
+	
+	GetWorld()->GetFirstPlayerController()->SetInputMode(InputMode);
 }
 
 void ACharacterController::PlayerTick(float DeltaTime)

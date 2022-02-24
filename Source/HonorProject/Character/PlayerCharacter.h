@@ -94,6 +94,11 @@ protected:
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
 
+	// 서버 테스트용 함수
+public:
+	void TestPacketUpdate0();
+	void TestPacketUpdate1();
+
 public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return m_CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return m_FollowCamera; }

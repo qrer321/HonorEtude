@@ -101,9 +101,12 @@ public:
 	const FCharacterTableInfo* FindCharacterInfo(const FString& Name) const;
 
 public:
-	TQueue<std::shared_ptr<GameServerMessage>>& GetMessageQueue() { return m_MessageQueue; }
+	std::shared_ptr<GameServerMessage> PopMessage();
+	bool IsEmptyMessage() const { return m_MessageQueue.IsEmpty(); }
 	
 public:
+	void PushMessage(std::shared_ptr<GameServerMessage> Message);
+	
 	bool ClientThreadCheck();
 	bool ServerConnect(const FString& IPString, const FString& PortString);
 	void CloseConnect();

@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "CharacterController.h"
 #include "CharacterAnimInstance.h"
+#include "HonorProject/Component/ObjectMessageComponent.h"
 #include "HonorProjectCharacter.generated.h"
 
 UCLASS()
@@ -44,6 +45,11 @@ protected:
 	
 	FTimerHandle m_CombatOffDelayTimer;
 	FTimerHandle m_WeaponCheckTimer;
+
+
+	// 서버 테스트
+	UPROPERTY()
+	UObjectMessageComponent* m_MessageComponent;
 
 public:
 	FCharacterInfo GetCharacterInfo() const { return m_CharacterInfo; }
@@ -116,4 +122,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SetWeaponSocketLocation(FName SocketName);
 	virtual void SetWeaponSocketLocation_Implementation(FName SocketName) {}
+	
+	// 서버 테스트
+	FORCEINLINE UObjectMessageComponent* GetObjectMessage() const { return m_MessageComponent; }
 };

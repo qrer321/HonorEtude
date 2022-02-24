@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MessageComponent.h"
-#include "Handler/HandlerHeader.h"
-#include "../Global/HonorProjectGameInstance.h"
+#include "HonorProject/Message/Handler/HandlerHeader.h"
+#include "HonorProject/Global/HonorProjectGameInstance.h"
 
 UMessageComponent::UMessageComponent()
 {
@@ -22,10 +22,11 @@ void UMessageComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
 
-	while (false == GameInstance->GetMessageQueue().IsEmpty())
+	
+	while (false == GameInstance->IsEmptyMessage())
 	{
 		std::shared_ptr<GameServerMessage> ServerMessage;
-		GameInstance->GetMessageQueue().Dequeue(ServerMessage);
+		ServerMessage = GameInstance->PopMessage();
 		if (nullptr == ServerMessage)
 		{
 			continue;

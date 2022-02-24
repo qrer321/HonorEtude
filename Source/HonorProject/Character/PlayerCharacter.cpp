@@ -114,6 +114,12 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	PlayerInputComponent->BindAxis("TurnRate", this, &APlayerCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APlayerCharacter::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
+
+	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("TestPacket0", EKeys::NumPadZero));
+	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("TestPacket1", EKeys::NumPadOne));
+
+	PlayerInputComponent->BindAction("TestPacket0", EInputEvent::IE_Released, this, &APlayerCharacter::TestPacketUpdate0);
+	PlayerInputComponent->BindAction("TestPacket1", EInputEvent::IE_Released, this, &APlayerCharacter::TestPacketUpdate1);
 }
 
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -479,4 +485,36 @@ void APlayerCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
+}
+
+void APlayerCharacter::TestPacketUpdate0()
+{
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+	if (nullptr == GameInstance || false == GameInstance->IsValidLowLevel())
+	{
+		return;
+	}
+
+#include "HonorProject/Message/ServerToClient.h"
+
+	std::shared_ptr<AIUpdateMessage> Message = std::make_shared<AIUpdateMessage>();
+	Message->m_Pos = FVector(500.0f, 500.0f, 200.0f);
+	Message->m_AIType = 0;
+	GameInstance->PushMessage(Message);
+}
+
+void APlayerCharacter::TestPacketUpdate1()
+{
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+	if (nullptr == GameInstance || false == GameInstance->IsValidLowLevel())
+	{
+		return;
+	}
+
+#include "HonorProject/Message/ServerToClient.h"
+
+	std::shared_ptr<AIUpdateMessage> Message = std::make_shared<AIUpdateMessage>();
+	Message->m_Pos = FVector(300.0f, 300.0f, 200.0f);
+	Message->m_AIType = 0;
+	GameInstance->PushMessage(Message);
 }
