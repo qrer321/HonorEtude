@@ -3,7 +3,8 @@
 #include "ThreadHandlerChatMessage.h"														
 #include "ThreadHandlerLoginResultMessage.h"																
 #include "ThreadHandlerServerDestroyMessage.h"																
-#include "ThreadHandlerAIUpdateMessage.h"																
+#include "ThreadHandlerObjectDestroyMessage.h"																
+#include "ThreadHandlerEnemyUpdateMessage.h"																
 																																		 
 template <typename MessageHandler, typename MessageType>																				 
 void OnMessageProcess(std::shared_ptr<GameServerMessage> Message, UWorld* World)														 
@@ -41,9 +42,15 @@ inline void AddGlobalHandler(Dispatcher& Dis, UWorld* World)
 		               OnMessageProcess<ThreadHandlerServerDestroyMessage, ServerDestroyMessage>(MoveTemp(GameServerMessage), World);															
 	               });																												
 																																	
-	Dis.AddHandler(MessageType::AIUpdate,																	
+	Dis.AddHandler(MessageType::ObjectDestroy,																	
 	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
 	               {																												
-		               OnMessageProcess<ThreadHandlerAIUpdateMessage, AIUpdateMessage>(MoveTemp(GameServerMessage), World);															
+		               OnMessageProcess<ThreadHandlerObjectDestroyMessage, ObjectDestroyMessage>(MoveTemp(GameServerMessage), World);															
+	               });																												
+																																	
+	Dis.AddHandler(MessageType::EnemyUpdate,																	
+	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
+	               {																												
+		               OnMessageProcess<ThreadHandlerEnemyUpdateMessage, EnemyUpdateMessage>(MoveTemp(GameServerMessage), World);															
 	               });																												
 }																																  		 

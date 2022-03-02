@@ -26,7 +26,7 @@ void UMessageComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	while (false == GameInstance->IsEmptyMessage())
 	{
 		std::shared_ptr<GameServerMessage> ServerMessage;
-		ServerMessage = GameInstance->PopMessage();
+		ServerMessage = GameInstance->PopClientMessage();
 		if (nullptr == ServerMessage)
 		{
 			continue;

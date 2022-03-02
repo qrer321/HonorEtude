@@ -1,8 +1,18 @@
 #pragma once
 
-enum class EAIUpdateType
+enum class EGameObjectType
 {
-	Move,
-	Attack,
+	Player,
+	Monster,
+	Item,
+	MAX
+};
+
+enum class EEnemyState
+{
+	NONE,
+	State_Idle,
+	State_Trace,
+	State_Attack,
 	MAX
 };

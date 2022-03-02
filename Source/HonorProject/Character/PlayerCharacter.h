@@ -98,6 +98,7 @@ protected:
 public:
 	void TestPacketUpdate0();
 	void TestPacketUpdate1();
+	void TestPacketUpdate2();
 
 public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return m_CameraBoom; }

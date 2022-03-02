@@ -46,11 +46,6 @@ protected:
 	FTimerHandle m_CombatOffDelayTimer;
 	FTimerHandle m_WeaponCheckTimer;
 
-
-	// 서버 테스트
-	UPROPERTY()
-	UObjectMessageComponent* m_MessageComponent;
-
 public:
 	FCharacterInfo GetCharacterInfo() const { return m_CharacterInfo; }
 
@@ -123,6 +118,23 @@ public:
 	void SetWeaponSocketLocation(FName SocketName);
 	virtual void SetWeaponSocketLocation_Implementation(FName SocketName) {}
 	
-	// 서버 테스트
+	////////////////////////////// FOR SERVER //////////////////////////////
+private:
+	int				m_ObjectID;
+	EGameObjectType m_ObjectType;
+	
+protected:
+	UPROPERTY()
+	UObjectMessageComponent* m_MessageComponent;
+
+public:
 	FORCEINLINE UObjectMessageComponent* GetObjectMessage() const { return m_MessageComponent; }
+	FORCEINLINE EGameObjectType GetObjectType() const { return m_ObjectType; }
+	FORCEINLINE int GetObjectID() const { return m_ObjectID; }
+
+	FORCEINLINE void SetObjectType(EGameObjectType ObjectType) { m_ObjectType = ObjectType; }
+	FORCEINLINE void SetObjectID(int ObjectID) { m_ObjectID = ObjectID; }
+
+protected:
+	virtual void Destroyed() override;
 };

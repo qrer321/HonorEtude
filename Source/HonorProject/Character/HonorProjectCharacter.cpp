@@ -2,6 +2,7 @@
 
 
 #include "HonorProjectCharacter.h"
+#include "HonorProject/GameMode/PlayGameMode.h"
 
 // Sets default values
 AHonorProjectCharacter::AHonorProjectCharacter()
@@ -307,6 +308,20 @@ void AHonorProjectCharacter::WeaponCheck()
 		SetWeaponSocketLocation(SocketName);
 		GetWorldTimerManager().ClearTimer(m_WeaponCheckTimer);
 	}
+}
+
+void AHonorProjectCharacter::Destroyed()
+{
+	Super::Destroyed();
+
+	APlayGameMode* PlayGameMode = Cast<APlayGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (nullptr == PlayGameMode || false == PlayGameMode->IsValidLowLevel())
+	{
+		LOG(TEXT("PlayGameMode Is Not Valid"));
+		return;
+	}
+
+	PlayGameMode->UnregistObject(m_ObjectID, GetObjectType(), this);
 }
 
 float AHonorProjectCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,

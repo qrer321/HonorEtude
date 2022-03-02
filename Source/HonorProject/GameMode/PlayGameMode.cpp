@@ -5,12 +5,18 @@
 #include "HonorProject/Character/CharacterController.h"
 
 APlayGameMode::APlayGameMode()
+	: m_ClientUniqueID(0)
 {
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("Blueprint'/Game/HonorProejct/PlayRelevant/Character/BP_PlayerCharacter.BP_PlayerCharacter_C'"));
 	if (PlayerPawnBPClass.Succeeded())
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	
 	PlayerControllerClass = ACharacterController::StaticClass();
+
+	for (size_t i = 0; i < static_cast<size_t>(EGameObjectType::MAX); ++i)
+	{
+		m_TypeOfAllObject.Add(static_cast<EGameObjectType>(i), TArray<AActor*>());
+	}
 }
 
 TSubclassOf<AMasterAICharacter> APlayGameMode::GetEnemyAIClasses(int EnemyType) const
@@ -28,7 +34,27 @@ TSubclassOf<AMasterAICharacter> APlayGameMode::GetEnemyAIClasses(int EnemyType) 
 	return m_AICharacterClasses[EnemyType];
 }
 
-bool APlayGameMode::RegisterObject(int ObjectID, AActor* Actor)
+AActor* APlayGameMode::GetGameObject(int ObjectID)
+{
+	if (false == m_AllObject.Contains(ObjectID))
+	{
+		return nullptr;
+	}
+
+	return m_AllObject.Find(ObjectID)->Actor;
+}
+
+TArray<AActor*> APlayGameMode::GetObjectGroup(EGameObjectType ObjectType)
+{
+	return m_TypeOfAllObject[ObjectType];
+}
+
+TArray<AActor*>& APlayGameMode::GetObjectGroupRef(EGameObjectType ObjectType)
+{
+	return m_TypeOfAllObject[ObjectType];
+}
+
+bool APlayGameMode::RegistObject(int ObjectID, EGameObjectType ObjectType, AActor* Actor)
 {
 	if (nullptr == Actor)
 	{
@@ -48,6 +74,29 @@ bool APlayGameMode::RegisterObject(int ObjectID, AActor* Actor)
 	}
 
 	m_AllObject.Add(ObjectID, { Actor, MessageComponent });
+	m_TypeOfAllObject[ObjectType].Add(Actor);
+	return true;
+}
+
+bool APlayGameMode::UnregistObject(int ObjectID, EGameObjectType ObjectType, AActor* Actor)
+{
+	if (nullptr == Actor)
+	{
+		return false;
+	}
+
+	if (false == IsRegistered(ObjectID))
+	{
+		return false;
+	}
+
+	if (m_AllObject[ObjectID].Actor != Actor)
+	{
+		LOGSTRING(TEXT("메세지와 액터가 서로 다릅니다"))
+	}
+
+	m_AllObject.Remove(ObjectID);
+	m_TypeOfAllObject[ObjectType].Remove(Actor);
 	return true;
 }
 

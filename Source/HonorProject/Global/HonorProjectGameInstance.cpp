@@ -120,7 +120,7 @@ const FCharacterTableInfo* UHonorProjectGameInstance::FindCharacterInfo(const FS
 	return m_CharacterInfoTable->FindRow<FCharacterTableInfo>(*Name, "");
 }
 
-std::shared_ptr<GameServerMessage> UHonorProjectGameInstance::PopMessage()
+std::shared_ptr<GameServerMessage> UHonorProjectGameInstance::PopClientMessage()
 {
 	std::shared_ptr<GameServerMessage> Message;
 	m_MessageQueue.Dequeue(Message);
@@ -128,7 +128,7 @@ std::shared_ptr<GameServerMessage> UHonorProjectGameInstance::PopMessage()
 	return Message;
 }
 
-void UHonorProjectGameInstance::PushMessage(std::shared_ptr<GameServerMessage> Message)
+void UHonorProjectGameInstance::PushClientMessage(std::shared_ptr<GameServerMessage> Message)
 {
 	m_MessageQueue.Enqueue(Message);
 }

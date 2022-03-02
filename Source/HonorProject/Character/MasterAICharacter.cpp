@@ -32,23 +32,23 @@ void AMasterAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	const UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
 	if (false == IsValid(GameInstance))
 	{
-		LOGSTRING(TEXT("GameInstance Is Not Valid"));
+		LOG(TEXT("GameInstance Is Not Valid"));
 		return;
 	}
 	
 	if (false == IsValid(m_HealthHUD))
 	{
-		LOGSTRING(TEXT("Helath HUD Is Not Valid"));
+		LOG(TEXT("Helath HUD Is Not Valid"));
 		return;
 	}
 
 	m_HealthWidget = Cast<UHealthHUD>(m_HealthHUD->GetWidget());
 	if (false == IsValid(m_HealthWidget))
 	{
-		LOGSTRING(TEXT("Helath Widget Is Not Valid"));
+		LOG(TEXT("Helath Widget Is Not Valid"));
 		return;
 	}
 	
@@ -69,6 +69,16 @@ void AMasterAICharacter::BeginPlay()
 		m_CharacterInfo.AttackSpeed = CharacterInfo->AttackSpeed;
 		m_CharacterInfo.MoveSpeed = CharacterInfo->MoveSpeed;
 	}
+
+	if (true == GameInstance->GetClientMode())
+	{
+		std::shared_ptr<EnemyUpdateMessage> Message = std::make_shared<EnemyUpdateMessage>();
+		Message->m_ObjectID = GetObjectID();
+		Message->m_Pos = GetActorLocation();
+		Message->m_UpdateType = EEnemyState::State_Idle;
+
+		GameInstance->PushClientMessage(Message);
+	}
 }
 
 // Called every frame
@@ -80,9 +90,9 @@ void AMasterAICharacter::Tick(float DeltaTime)
 	while (false == GetObjectMessage()->IsEmpty())
 	{
 		std::shared_ptr<GameServerMessage> ServerMessage = GetObjectMessage()->Dequeue();
-		if (MessageType::AIUpdate == ServerMessage->GetType())
+		if (MessageType::EnemyUpdate == ServerMessage->GetType())
 		{
-			std::shared_ptr<AIUpdateMessage> UpdateMessage = std::static_pointer_cast<AIUpdateMessage>(ServerMessage);
+			std::shared_ptr<EnemyUpdateMessage> UpdateMessage = std::static_pointer_cast<EnemyUpdateMessage>(ServerMessage);
 			if (nullptr == UpdateMessage)
 			{
 				continue;
@@ -90,8 +100,11 @@ void AMasterAICharacter::Tick(float DeltaTime)
 
 			SetActorLocation(UpdateMessage->m_Pos);
 		}
+		else if (MessageType::ObjectDestroy == ServerMessage->GetType())
+		{
+			Destroy();
+		}
 	}
-
 }
 
 // Called to bind functionality to input

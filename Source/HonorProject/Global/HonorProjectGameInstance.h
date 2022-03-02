@@ -84,6 +84,8 @@ private:
 
 	TQueue<std::shared_ptr<GameServerMessage>> m_MessageQueue;
 
+	bool m_ClientMode;
+
 public:
 	// Temp Member Variable
 	FString			m_UserID;
@@ -98,18 +100,19 @@ private:
 public:
 	virtual void Init() override;
 	virtual void BeginDestroy() override;
+	
 	const FCharacterTableInfo* FindCharacterInfo(const FString& Name) const;
 
-public:
-	std::shared_ptr<GameServerMessage> PopMessage();
+	void PushClientMessage(std::shared_ptr<GameServerMessage> Message);
+	std::shared_ptr<GameServerMessage> PopClientMessage();
 	bool IsEmptyMessage() const { return m_MessageQueue.IsEmpty(); }
-	
-public:
-	void PushMessage(std::shared_ptr<GameServerMessage> Message);
 	
 	bool ClientThreadCheck();
 	bool ServerConnect(const FString& IPString, const FString& PortString);
 	void CloseConnect();
 
 	bool Send(const std::vector<uint8>& Data);
+
+	FORCEINLINE bool GetClientMode() { return m_ClientMode; }
+	FORCEINLINE void SetClientMode(bool Mode) { m_ClientMode = Mode; }
 };

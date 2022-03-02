@@ -42,4 +42,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Login")
 	void ServerLogin();
+
+	UFUNCTION(BlueprintCallable, Category="GameMode")
+	void SetClientMode(bool Mode);
 };

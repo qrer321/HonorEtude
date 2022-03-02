@@ -9,6 +9,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "../Global/HonorProjectGameInstance.h"
 #include "MasterAICharacter.h"
+#include "HonorProject/GameMode/PlayGameMode.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -68,8 +69,14 @@ void APlayerCharacter::BeginPlay()
 	const FAttachmentTransformRules rules(EAttachmentRule::SnapToTarget, true);
 	m_SMSword->AttachToComponent(GetMesh(), rules, TEXT("S_Unequip"));
 
-	const UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
-	if (GameInstance)
+	APlayGameMode* PlayGameMode = Cast<APlayGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (false == IsValid(PlayGameMode))
+	{
+		return;
+	}
+	
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+	if (IsValid(GameInstance))
 	{
 		const FCharacterTableInfo* CharacterInfo = GameInstance->FindCharacterInfo(TEXT("Player"));
 		if (CharacterInfo)
@@ -84,6 +91,13 @@ void APlayerCharacter::BeginPlay()
 			m_CharacterInfo.SPRecoverMaxTime = CharacterInfo->SPRecoverMaxTime;
 			m_CharacterInfo.AttackSpeed = CharacterInfo->AttackSpeed;
 			m_CharacterInfo.MoveSpeed = CharacterInfo->MoveSpeed;
+		}
+
+		if (true == GameInstance->GetClientMode())
+		{
+			SetObjectType(EGameObjectType::Player);
+			SetObjectID(PlayGameMode->GetUniqueID());
+			PlayGameMode->RegistObject(0, EGameObjectType::Player, this);
 		}
 	}
 }
@@ -117,9 +131,11 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 
 	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("TestPacket0", EKeys::NumPadZero));
 	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("TestPacket1", EKeys::NumPadOne));
+	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("TestPacket2", EKeys::NumPadTwo));
 
 	PlayerInputComponent->BindAction("TestPacket0", EInputEvent::IE_Released, this, &APlayerCharacter::TestPacketUpdate0);
 	PlayerInputComponent->BindAction("TestPacket1", EInputEvent::IE_Released, this, &APlayerCharacter::TestPacketUpdate1);
+	PlayerInputComponent->BindAction("TestPacket2", EInputEvent::IE_Released, this, &APlayerCharacter::TestPacketUpdate2);
 }
 
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -495,12 +511,18 @@ void APlayerCharacter::TestPacketUpdate0()
 		return;
 	}
 
+	if (false == GameInstance->GetClientMode())
+	{
+		return;
+	}
+
 #include "HonorProject/Message/ServerToClient.h"
 
-	std::shared_ptr<AIUpdateMessage> Message = std::make_shared<AIUpdateMessage>();
+	std::shared_ptr<EnemyUpdateMessage> Message = std::make_shared<EnemyUpdateMessage>();
+	Message->m_ObjectID = 100;
 	Message->m_Pos = FVector(500.0f, 500.0f, 200.0f);
-	Message->m_AIType = 0;
-	GameInstance->PushMessage(Message);
+	Message->m_EnemyType = 0;
+	GameInstance->PushClientMessage(Message);
 }
 
 void APlayerCharacter::TestPacketUpdate1()
@@ -511,10 +533,37 @@ void APlayerCharacter::TestPacketUpdate1()
 		return;
 	}
 
+	if (false == GameInstance->GetClientMode())
+	{
+		return;
+	}
+
 #include "HonorProject/Message/ServerToClient.h"
 
-	std::shared_ptr<AIUpdateMessage> Message = std::make_shared<AIUpdateMessage>();
+	std::shared_ptr<EnemyUpdateMessage> Message = std::make_shared<EnemyUpdateMessage>();
+	Message->m_ObjectID = 100;
 	Message->m_Pos = FVector(300.0f, 300.0f, 200.0f);
-	Message->m_AIType = 0;
-	GameInstance->PushMessage(Message);
+	Message->m_EnemyType = 0;
+	//Message->m_UpdateType = EEnemyState::State_Idle;
+	GameInstance->PushClientMessage(Message);
+}
+
+void APlayerCharacter::TestPacketUpdate2()
+{
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+	if (nullptr == GameInstance || false == GameInstance->IsValidLowLevel())
+	{
+		return;
+	}
+
+	if (false == GameInstance->GetClientMode())
+	{
+		return;
+	}
+
+#include "HonorProject/Message/ServerToClient.h"
+
+	std::shared_ptr<ObjectDestroyMessage> Message = std::make_shared<ObjectDestroyMessage>();
+	Message->m_ObjectID = 100;
+	GameInstance->PushClientMessage(Message);
 }

@@ -40,7 +40,14 @@ void ULoginUI::ServerConnect()
 void ULoginUI::ServerLogin()
 {
 	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
-	GameInstance->m_UserID = m_IDString;
+	if (true == GameInstance->GetClientMode())
+	{
+		std::shared_ptr<LoginResultMessage> Message = std::make_shared<LoginResultMessage>();
+		Message->m_Code = EGameServerCode::OK;
+
+		GameInstance->PushClientMessage(Message);
+		return;
+	}
 	
 	std::string ID;
 	std::string PW;
@@ -54,5 +61,17 @@ void ULoginUI::ServerLogin()
 	GameServerSerializer Serializer;
 	NewMessage.Serialize(Serializer);
 
+	GameInstance->m_UserID = m_IDString;
 	GameInstance->Send(Serializer.GetData());
+}
+
+void ULoginUI::SetClientMode(bool Mode)
+{
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+	if (false == IsValid(GameInstance))
+	{
+		return;
+	}
+
+	GameInstance->SetClientMode(Mode);
 }
