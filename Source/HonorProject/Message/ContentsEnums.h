@@ -3,7 +3,7 @@
 enum class EGameObjectType
 {
 	Player,
-	Monster,
+	Enemy,
 	Item,
 	MAX
 };

@@ -157,40 +157,49 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 */
 void APlayerCharacter::Client_FindClosestEnemy_Implementation()
 {
-	if (false == IsCombatMode())
+	APlayGameMode* PlayGameMode = Cast<APlayGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (false == PlayGameMode->IsValidLowLevel())
 	{
-		if (IsValid(m_ClosestEnemy))
-		{
-			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
-			m_ClosestEnemy = nullptr;
-		}
-
+		LOG(TEXT("PlayGameMode Is Not Valid"));
+		m_IsEnemyFind = false;
 		return;
 	}
+	
+	// if (false == IsCombatMode())
+	// {
+	// 	if (IsValid(m_ClosestEnemy))
+	// 	{
+	// 		m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
+	// 		m_ClosestEnemy = nullptr;
+	// 	}
+	//
+	// 	m_IsEnemyFind = false;
+	// 	return;
+	// }
 
 	m_ClosestEnemyDistance = TNumericLimits<float>::Max();
-
-	TArray<AActor*> AllEnemyActor;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMasterAICharacter::StaticClass(), AllEnemyActor);
-
-	for (const auto& actor : AllEnemyActor)
+	TArray<AActor*> AllEnemyActor = PlayGameMode->GetObjectGroupRef(EGameObjectType::Enemy);
+	for (const auto Actor : AllEnemyActor)
 	{
-		const float DistanceDiff = actor->GetDistanceTo(this);
+		const float DistanceDiff = Actor->GetDistanceTo(this);
 		if (DistanceDiff < m_ClosestEnemyDistance)
 		{
 			m_ClosestEnemyDistance = DistanceDiff;
-			m_ClosestEnemy = Cast<AMasterAICharacter>(actor);
+			m_ClosestEnemy = Cast<AMasterAICharacter>(Actor);
 			m_ClosestEnemy->GetTargetDecal()->SetVisibility(false);
 		}
 	}
 
 	if (false == IsValid(m_ClosestEnemy))
 	{
+		m_IsEnemyFind = false;
+		MultiCast_IsCombatMode(false, true, false, 600.f);
+		Client_ReticleVisibility();
+		Server_PlayMontage(m_EquipAnimMontage, 1.f, TEXT("Unequip"));
 		return;
 	}
 
 	m_ClosestEnemy->GetTargetDecal()->SetVisibility(true);
-
 	SetDetectAttackDirectionTimer();
 }
 

@@ -46,6 +46,8 @@ protected:
 	FTimerHandle m_CombatOffDelayTimer;
 	FTimerHandle m_WeaponCheckTimer;
 
+	bool m_IsEnemyFind = true;
+
 public:
 	FCharacterInfo GetCharacterInfo() const { return m_CharacterInfo; }
 

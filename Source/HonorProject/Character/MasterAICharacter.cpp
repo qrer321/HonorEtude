@@ -53,7 +53,6 @@ void AMasterAICharacter::BeginPlay()
 	}
 	
 	m_HealthWidget->SetWidgetOwner(this);
-	//m_HealthWidget->SetHealthVisibility(false);
 
 	const FCharacterTableInfo* CharacterInfo = GameInstance->FindCharacterInfo(TEXT("Player"));
 	if (nullptr != CharacterInfo)

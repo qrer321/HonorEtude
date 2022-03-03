@@ -56,11 +56,11 @@ void ThreadHandlerEnemyUpdateMessage::Start()
 		FTransform CharacterTransform = FTransform(m_Message->m_Pos);
 
 		AMasterAICharacter* NewEnemyCharacter = m_World->SpawnActorDeferred<AMasterAICharacter>(AICharacter.Get(), CharacterTransform);
-		NewEnemyCharacter->SetObjectType(EGameObjectType::Monster);
+		NewEnemyCharacter->SetObjectType(EGameObjectType::Enemy);
 		NewEnemyCharacter->SetObjectID(m_Message->m_ObjectID);
 		NewEnemyCharacter->FinishSpawning(CharacterTransform);
 
-		PlayGameMode->RegistObject(m_Message->m_ObjectID, EGameObjectType::Monster, NewEnemyCharacter);
+		PlayGameMode->RegistObject(m_Message->m_ObjectID, EGameObjectType::Enemy, NewEnemyCharacter);
 		PlayGameMode->PushObjectMessage(m_Message->m_ObjectID, m_Message);
 		return;
 	}

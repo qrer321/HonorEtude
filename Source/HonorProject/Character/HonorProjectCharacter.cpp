@@ -78,10 +78,20 @@ void AHonorProjectCharacter::Server_IsCombatMode_Implementation(bool IsCombatMod
 	{
 		return;
 	}
+
+	// 먼저 가장 가까이 있는 Enemy Actor를 찾는다.
+	// 없으면 그냥 return
+	m_IsEnemyFind = true;
+	Client_FindClosestEnemy();
+	if (false == m_IsEnemyFind)
+	{
+		// Replicated Function의 경우 return value를 반환할 수 없고,
+		// non-const reference 또한 사용할 수 없기에
+		// bool 멤버변수로 확인한다.
+		return;
+	}
 	
 	MultiCast_IsCombatMode(IsCombatMode, UseOrientRotation, UseControllerDesiredRotation, MaxWalkSpeed);
-
-	Client_FindClosestEnemy();
 	Client_ReticleVisibility();
 	Server_PlayMontage(m_EquipAnimMontage, 1.f, StartSectionName);
 }
@@ -107,15 +117,13 @@ void AHonorProjectCharacter::MultiCast_PlayMontage_Implementation(UAnimMontage* 
 {
 	if (false == IsValid(m_AnimInstance))
 	{
-		PrintViewport(10.f, FColor::Red, TEXT("AnimInstance Is Not Valid"));
-		PrintViewport(10.f, FColor::Red, TEXT("MultiCast_PlayMontage_Implementation"));
+		LOG(TEXT("AnimInstance Is Not Valid"));
 		return;
 	}
 
 	if (false == IsValid(AnimMontage))
 	{
-		PrintViewport(10.f, FColor::Red, TEXT("AnimMontage Is Not Valid"));
-		PrintViewport(10.f, FColor::Red, TEXT("MultiCast_PlayMontage_Implementation"));
+		LOG(TEXT("AnimMontage Is Not Valid"));
 		return;
 	}
 
