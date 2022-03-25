@@ -39,6 +39,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Login")
 	void ServerConnect();
+
+	UFUNCTION(BlueprintCallable, Category = "Login")
+	void ServerJoin();
 	
 	UFUNCTION(BlueprintCallable, Category="Login")
 	void ServerLogin();

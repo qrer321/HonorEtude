@@ -30,11 +30,34 @@ void ULoginUI::ServerConnect()
 	
 	if (false == GameInstance->ServerConnect(m_IPString, m_PortString))
 	{
-		m_ConnectStatus = TEXT("접속 실패");
+		m_ConnectStatus = TEXT("Connect Failed");
 		return;
 	}
 
-	m_ConnectStatus = TEXT("접속 성공");
+	m_ConnectStatus = TEXT("Connect Succeed");
+}
+
+void ULoginUI::ServerJoin()
+{
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+	if (true == GameInstance->GetClientMode())
+	{
+		return;
+	}
+
+	std::string ID;
+	std::string PW;
+	UClientBlueprintFunctionLibrary::FStringToUTF8(m_IDString, ID);
+	UClientBlueprintFunctionLibrary::FStringToUTF8(m_PWString, PW);
+
+	JoinMessage NewMessage;
+	NewMessage.m_ID = ID;
+	NewMessage.m_PW = PW;
+
+	GameServerSerializer Serializer;
+	NewMessage.Serialize(Serializer);
+
+	GameInstance->Send(Serializer.GetData());
 }
 
 void ULoginUI::ServerLogin()

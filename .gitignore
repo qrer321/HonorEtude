@@ -410,5 +410,18 @@ Plugins/*/Intermediate/*
 # Cache files for the editor to use
 DerivedDataCache/*
 
-Content
+!Content
 Plugins
+Content/Collections
+Content/DarkKnight
+Content/Developers
+Content/Frank_Slash_Pack
+Content/GhostSamurai_Bundle
+Content/GKnight
+Content/GreatSword
+Content/LongswordAnimsetPro
+Content/Lordenfel
+
+Content/AdvancedMagicFX12
+Content/Asset
+Content/BaseContent
