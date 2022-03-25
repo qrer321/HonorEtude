@@ -36,7 +36,8 @@ void ThreadHandlerLoginResultMessage::Start()
 	
 	if (EGameServerCode::OK == m_LoginResultMessage->m_Code)
 	{
-		UGameplayStatics::OpenLevel(m_World, TEXT("PlayTestLevel"));
+		//UGameplayStatics::OpenLevel(m_World, TEXT("PlayTestLevel"));
+		PrintViewport(10.f, FColor::Red, TEXT("Login Succeed"));
 		return;
 	}
 }
