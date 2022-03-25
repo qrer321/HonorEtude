@@ -2,6 +2,7 @@
 																																		 
 #include "ThreadHandlerChatMessage.h"														
 #include "ThreadHandlerLoginResultMessage.h"																
+#include "ThreadHandlerJoinResultMessage.h"																
 #include "ThreadHandlerServerDestroyMessage.h"																
 #include "ThreadHandlerObjectDestroyMessage.h"																
 #include "ThreadHandlerEnemyUpdateMessage.h"																
@@ -34,6 +35,12 @@ inline void AddGlobalHandler(Dispatcher& Dis, UWorld* World)
 	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
 	               {																												
 		               OnMessageProcess<ThreadHandlerLoginResultMessage, LoginResultMessage>(MoveTemp(GameServerMessage), World);															
+	               });																												
+																																	
+	Dis.AddHandler(MessageType::JoinResult,																	
+	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
+	               {																												
+		               OnMessageProcess<ThreadHandlerJoinResultMessage, JoinResultMessage>(MoveTemp(GameServerMessage), World);															
 	               });																												
 																																	
 	Dis.AddHandler(MessageType::ServerDestroy,																	
