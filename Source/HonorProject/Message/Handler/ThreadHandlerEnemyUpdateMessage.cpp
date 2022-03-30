@@ -2,28 +2,6 @@
 
 #include "HonorProject/GameMode/PlayGameMode.h"
 
-ThreadHandlerEnemyUpdateMessage::ThreadHandlerEnemyUpdateMessage(std::shared_ptr<EnemyUpdateMessage> Message)
-	: m_World(nullptr)
-	, m_GameInstance(nullptr)
-	, m_Message(MoveTemp(Message))
-{
-}
-
-ThreadHandlerEnemyUpdateMessage::ThreadHandlerEnemyUpdateMessage(ThreadHandlerEnemyUpdateMessage&& Other) noexcept
-	: m_World(Other.m_World)
-	, m_GameInstance(Other.m_GameInstance)
-	, m_Message(MoveTemp(Other.m_Message))
-{
-	Other.m_World = nullptr;
-	Other.m_GameInstance = nullptr;
-}
-
-void ThreadHandlerEnemyUpdateMessage::Initialize(UHonorProjectGameInstance* GameInstance, UWorld* World)
-{
-	m_GameInstance = GameInstance;
-	m_World = World;
-}
-
 void ThreadHandlerEnemyUpdateMessage::Start()
 {
 	if (nullptr == m_World)

@@ -6,6 +6,10 @@
 #include "HonorProject/Global/GameInfo.h"
 #include "Components/ActorComponent.h"
 #include "HonorProject/Message/Messages.h"
+#include "HonorProject/Message/ContentsEnum.h"
+#include "HonorProject/Message/ServerAndClient.h"
+#include "HonorProject/Message/ServerToClient.h"
+#include "HonorProject/Message/ClientToServer.h"
 #include "ObjectMessageComponent.generated.h"
 
 

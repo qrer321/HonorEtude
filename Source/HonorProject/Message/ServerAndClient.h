@@ -1,5 +1,8 @@
 #pragma once																										
-#include "GameServerMessage.h"																					
+#include "GameServerMessage.h"																	
+#include "MessageTypeEnum.h"
+#include "ContentsEnum.h"
+#include "ContentsStructure.h"
 																													
 class ChatMessage : public GameServerMessage											
 {																											
@@ -9,7 +12,7 @@ public:
 																												
 public:																										
 	ChatMessage()																		
-		: GameServerMessage(MessageType::Chat)											
+		: GameServerMessage(static_cast<uint32_t>(MessageType::Chat))					
 		, m_ID()																		
 		, m_Message()																		
 	{																											

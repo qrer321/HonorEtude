@@ -1,6 +1,7 @@
 #pragma once
 #include "../Global/GameInfo.h"
 #include "Messages.h"
+#include "MessageTypeEnum.h"
 #include <memory>
 
 using MessageHandler = TFunction<void(std::shared_ptr<GameServerMessage>)>;

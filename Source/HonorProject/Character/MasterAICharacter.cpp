@@ -95,7 +95,7 @@ void AMasterAICharacter::Tick(float DeltaTime)
 	while (false == GetObjectMessage()->IsEmpty())
 	{
 		std::shared_ptr<GameServerMessage> ServerMessage = GetObjectMessage()->Dequeue();
-		if (MessageType::EnemyUpdate == ServerMessage->GetType())
+		if (MessageType::EnemyUpdate == ServerMessage->GetType<MessageType>())
 		{
 			std::shared_ptr<EnemyUpdateMessage> UpdateMessage = std::static_pointer_cast<EnemyUpdateMessage>(ServerMessage);
 			if (nullptr == UpdateMessage)
@@ -105,7 +105,7 @@ void AMasterAICharacter::Tick(float DeltaTime)
 
 			SetActorLocation(UpdateMessage->m_Pos);
 		}
-		else if (MessageType::ObjectDestroy == ServerMessage->GetType())
+		else if (MessageType::ObjectDestroy == ServerMessage->GetType<MessageType>())
 		{
 			Destroy();
 		}

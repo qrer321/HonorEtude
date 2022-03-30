@@ -89,6 +89,7 @@ private:
 public:
 	// Temp Member Variable
 	FString			m_UserID;
+	FString			m_Nickname;
 
 	UPROPERTY()
 	UChatWindow*	m_ChatWindow;

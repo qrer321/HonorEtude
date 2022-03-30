@@ -1,27 +1,5 @@
 ﻿#include "ThreadHandlerJoinResultMessage.h"
 
-ThreadHandlerJoinResultMessage::ThreadHandlerJoinResultMessage(std::shared_ptr<JoinResultMessage> ResultMessage)
-	: m_World(nullptr)
-	, m_GameInstance(nullptr)
-	, m_JoinResultMessage(MoveTemp(ResultMessage))
-{
-}
-
-ThreadHandlerJoinResultMessage::ThreadHandlerJoinResultMessage(ThreadHandlerJoinResultMessage&& Other) noexcept
-	: m_World(Other.m_World)
-	, m_GameInstance(Other.m_GameInstance)
-	, m_JoinResultMessage(MoveTemp(Other.m_JoinResultMessage))
-{
-	Other.m_World = nullptr;
-	Other.m_GameInstance = nullptr;
-}
-
-void ThreadHandlerJoinResultMessage::Initialize(UHonorProjectGameInstance* GameInstance, UWorld* World)
-{
-	m_GameInstance = GameInstance;
-	m_World = World;	
-}
-
 void ThreadHandlerJoinResultMessage::Start()
 {
 	if (nullptr == m_World)

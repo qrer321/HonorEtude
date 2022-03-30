@@ -1,5 +1,8 @@
 #pragma once																										
-#include "GameServerMessage.h"																					
+#include "GameServerMessage.h"																	
+#include "MessageTypeEnum.h"
+#include "ContentsEnum.h"
+#include "ContentsStructure.h"
 																													
 class LoginMessage : public GameServerMessage											
 {																											
@@ -9,7 +12,7 @@ public:
 																												
 public:																										
 	LoginMessage()																		
-		: GameServerMessage(MessageType::Login)											
+		: GameServerMessage(static_cast<uint32_t>(MessageType::Login))					
 		, m_ID()																		
 		, m_PW()																		
 	{																											
@@ -53,7 +56,7 @@ public:
 																												
 public:																										
 	JoinMessage()																		
-		: GameServerMessage(MessageType::Join)											
+		: GameServerMessage(static_cast<uint32_t>(MessageType::Join))					
 		, m_ID()																		
 		, m_PW()																		
 	{																											
@@ -86,6 +89,46 @@ public:
 																												
 		serializer >> m_ID;
 		serializer >> m_PW;
+	}																											
+};																											
+
+class CreateCharacterMessage : public GameServerMessage											
+{																											
+public:																										
+	std::string m_Nickname;
+																												
+public:																										
+	CreateCharacterMessage()																		
+		: GameServerMessage(static_cast<uint32_t>(MessageType::CreateCharacter))					
+		, m_Nickname()																		
+	{																											
+	}																											
+	~CreateCharacterMessage() override = default;													
+																												
+	CreateCharacterMessage(const CreateCharacterMessage& other) = delete;				
+	CreateCharacterMessage(CreateCharacterMessage&& other) noexcept = delete;			
+																												
+	CreateCharacterMessage& operator=(const CreateCharacterMessage& other) = delete;	
+	CreateCharacterMessage& operator=(CreateCharacterMessage&& other) = delete;			
+																												
+public:																										
+	int SizeCheck() override																					
+	{																											
+		return DataSizeCheck(m_Nickname);
+	}																											
+																												
+	void Serialize(GameServerSerializer& serializer) override													
+	{																											
+		GameServerMessage::Serialize(serializer);																
+																												
+		serializer << m_Nickname;
+	}																											
+																												
+	void Deserialize(GameServerSerializer& serializer) override													
+	{																											
+		GameServerMessage::Deserialize(serializer);																
+																												
+		serializer >> m_Nickname;
 	}																											
 };																											
 

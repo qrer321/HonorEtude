@@ -3,6 +3,7 @@
 #include "ThreadHandlerChatMessage.h"														
 #include "ThreadHandlerLoginResultMessage.h"																
 #include "ThreadHandlerJoinResultMessage.h"																
+#include "ThreadHandlerCreateCharacterResultMessage.h"																
 #include "ThreadHandlerServerDestroyMessage.h"																
 #include "ThreadHandlerObjectDestroyMessage.h"																
 #include "ThreadHandlerEnemyUpdateMessage.h"																
@@ -18,8 +19,8 @@ void OnMessageProcess(std::shared_ptr<GameServerMessage> Message, UWorld* World)
 																																		 
 	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(World->GetGameInstance());								 
 																																		 
-	MessageHandler Handler = MessageHandler(MoveTempIfPossible(ConvertMessage));														 
-	Handler.Initialize(GameInstance, World);																							 
+	MessageHandler Handler = MessageHandler();																							 
+	Handler.Initialize(ConvertMessage, GameInstance, World);																							 
 	Handler.Start();																													 
 }																																		 
 																																		 
@@ -41,6 +42,12 @@ inline void AddGlobalHandler(Dispatcher& Dis, UWorld* World)
 	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
 	               {																												
 		               OnMessageProcess<ThreadHandlerJoinResultMessage, JoinResultMessage>(MoveTemp(GameServerMessage), World);															
+	               });																												
+																																	
+	Dis.AddHandler(MessageType::CreateCharacterResult,																	
+	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
+	               {																												
+		               OnMessageProcess<ThreadHandlerCreateCharacterResultMessage, CreateCharacterResultMessage>(MoveTemp(GameServerMessage), World);															
 	               });																												
 																																	
 	Dis.AddHandler(MessageType::ServerDestroy,																	

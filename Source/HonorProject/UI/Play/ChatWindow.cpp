@@ -7,6 +7,9 @@
 #include "HonorProject/Global/HonorProjectGameInstance.h"
 #include "HonorProject/Global/ClientBlueprintFunctionLibrary.h"
 #include "HonorProject/Message/Messages.h"
+#include "HonorProject/Message/ServerAndClient.h"
+#include "HonorProject/Message/ServerToClient.h"
+#include "HonorProject/Message/ClientToServer.h"
 
 void UChatWindow::NativeConstruct()
 {
