@@ -74,6 +74,14 @@ void ULoginUI::ServerLogin()
 		GameInstance->PushClientMessage(Message);
 		return;
 	}
+
+	if (true == GameInstance->m_LoginProcess)
+	{
+		// 잠시 대기
+		return;
+	}
+
+	GameInstance->m_Characters.clear();
 	
 	std::string ID;
 	std::string PW;
@@ -88,7 +96,10 @@ void ULoginUI::ServerLogin()
 	NewMessage.Serialize(Serializer);
 
 	GameInstance->m_UserID = m_IDString;
-	GameInstance->Send(Serializer.GetData());
+	if (true == GameInstance->Send(Serializer.GetData()))
+	{
+		GameInstance->m_LoginProcess = true;
+	}
 }
 
 void ULoginUI::SetClientMode(bool Mode)

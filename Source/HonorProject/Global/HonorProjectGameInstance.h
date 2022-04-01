@@ -7,6 +7,7 @@
 #include "GameInfo.h"
 #include "Engine/GameInstance.h"
 #include "HonorProject/Message/Messages.h"
+#include "HonorProject/Message/ContentsStructure.h"
 #include "HonorProject/UI/Play/ChatWindow.h"
 #include "HonorProjectGameInstance.generated.h"
 
@@ -88,15 +89,17 @@ private:
 
 public:
 	// Temp Member Variable
-	FString			m_UserID;
-	FString			m_Nickname;
-
+	FString						m_UserID;
+	FString						m_Nickname;
+	TAtomic<bool>				m_LoginProcess;
+	std::vector<CharacterInfo>	m_Characters;
+	
 	UPROPERTY()
-	UChatWindow*	m_ChatWindow;
+	UChatWindow*				m_ChatWindow;
 
 private:
 	UPROPERTY()
-	UDataTable*			m_CharacterInfoTable;
+	UDataTable*					m_CharacterInfoTable;
 
 public:
 	virtual void Init() override;
@@ -114,6 +117,6 @@ public:
 
 	bool Send(const std::vector<uint8>& Data);
 
-	FORCEINLINE bool GetClientMode() { return m_ClientMode; }
+	FORCEINLINE bool GetClientMode() const { return m_ClientMode; }
 	FORCEINLINE void SetClientMode(bool Mode) { m_ClientMode = Mode; }
 };

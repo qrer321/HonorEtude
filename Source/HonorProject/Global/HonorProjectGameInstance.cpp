@@ -97,6 +97,9 @@ UHonorProjectGameInstance::UHonorProjectGameInstance()
 	static ConstructorHelpers::FObjectFinder<UDataTable> CharacterTableAsset(TEXT("DataTable'/Game/HonorProejct/PlayRelevant/Character/Data/DTCharacterInfo.DTCharacterInfo'"));
 	if (CharacterTableAsset.Succeeded())
 		m_CharacterInfoTable = CharacterTableAsset.Object;
+
+	m_ClientMode = false;
+	m_LoginProcess = false;
 }
 
 UHonorProjectGameInstance::~UHonorProjectGameInstance()

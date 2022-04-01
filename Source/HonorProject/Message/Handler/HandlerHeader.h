@@ -4,6 +4,7 @@
 #include "ThreadHandlerLoginResultMessage.h"																
 #include "ThreadHandlerJoinResultMessage.h"																
 #include "ThreadHandlerCreateCharacterResultMessage.h"																
+#include "ThreadHandlerCharacterListMessage.h"																
 #include "ThreadHandlerServerDestroyMessage.h"																
 #include "ThreadHandlerObjectDestroyMessage.h"																
 #include "ThreadHandlerEnemyUpdateMessage.h"																
@@ -20,7 +21,7 @@ void OnMessageProcess(std::shared_ptr<GameServerMessage> Message, UWorld* World)
 	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(World->GetGameInstance());								 
 																																		 
 	MessageHandler Handler = MessageHandler();																							 
-	Handler.Initialize(ConvertMessage, GameInstance, World);																							 
+	Handler.Initialize(MoveTempIfPossible(ConvertMessage), GameInstance, World);														 
 	Handler.Start();																													 
 }																																		 
 																																		 
@@ -48,6 +49,12 @@ inline void AddGlobalHandler(Dispatcher& Dis, UWorld* World)
 	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
 	               {																												
 		               OnMessageProcess<ThreadHandlerCreateCharacterResultMessage, CreateCharacterResultMessage>(MoveTemp(GameServerMessage), World);															
+	               });																												
+																																	
+	Dis.AddHandler(MessageType::CharacterList,																	
+	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
+	               {																												
+		               OnMessageProcess<ThreadHandlerCharacterListMessage, CharacterListMessage>(MoveTemp(GameServerMessage), World);															
 	               });																												
 																																	
 	Dis.AddHandler(MessageType::ServerDestroy,																	
