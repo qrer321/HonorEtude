@@ -92,8 +92,10 @@ public:
 	FString						m_UserID;
 	FString						m_Nickname;
 	TAtomic<bool>				m_LoginProcess;
-	std::vector<CharacterInfo>	m_Characters;
+	std::vector<FCharacterInfo>	m_Characters;
 	
+	UPROPERTY()
+	UListView*					m_CharacterListView;
 	UPROPERTY()
 	UChatWindow*				m_ChatWindow;
 

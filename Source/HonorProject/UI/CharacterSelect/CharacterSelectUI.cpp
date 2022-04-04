@@ -12,14 +12,15 @@ void UCharacterSelectUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	const UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
 	
 	m_CharacterListView = Cast<UListView>(GetWidgetFromName(TEXT("CharacterList")));
 	if (false == m_CharacterListView->IsValidLowLevel())
 	{
 		return;
 	}
-	
+
+	GameInstance->m_CharacterListView = m_CharacterListView;
 	for (size_t i = 0; i < GameInstance->m_Characters.size(); ++i)
 	{
 		UCharacterListObject* NewCharacter = NewObject<UCharacterListObject>();

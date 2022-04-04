@@ -16,7 +16,7 @@ class HONORPROJECT_API AHonorProjectCharacter : public ACharacter
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CharacterInfo, meta = (AllowPrivateAccess = "true"), Replicated)
-	FCharacterInfo m_CharacterInfo;
+	FCharacterInfo_Temp m_CharacterInfo;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Controller, meta = (AllowPrivateAccess = "true"))
 	ACharacterController* m_CharacterController;
@@ -47,9 +47,6 @@ protected:
 	FTimerHandle m_WeaponCheckTimer;
 
 	bool m_IsEnemyFind = true;
-
-public:
-	FCharacterInfo GetCharacterInfo() const { return m_CharacterInfo; }
 
 public:
 	// Sets default values for this character's properties

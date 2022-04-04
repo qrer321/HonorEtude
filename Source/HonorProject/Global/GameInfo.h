@@ -28,7 +28,7 @@ enum class EAttackDirection : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FCharacterInfo
+struct FCharacterInfo_Temp
 {
 	GENERATED_BODY()
 

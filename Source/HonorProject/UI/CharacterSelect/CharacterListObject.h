@@ -13,13 +13,13 @@ class HONORPROJECT_API UCharacterListObject : public UObject
 	GENERATED_BODY()
 
 private:
-	CharacterInfo	m_CharacterInfo;
+	FCharacterInfo	m_CharacterInfo;
 	FString			m_ConvertNickname;
 
 public:
-	const CharacterInfo& GetCharacterInfo() const { return m_CharacterInfo; }
+	const FCharacterInfo& GetCharacterInfo() const { return m_CharacterInfo; }
 	const FString& GetNickname() const { return m_ConvertNickname; }
 
-	void SetCharacterInfo(const CharacterInfo& Info) { m_CharacterInfo = Info; }
+	void SetCharacterInfo(const FCharacterInfo& Info) { m_CharacterInfo = Info; }
 	void SetNickname(const FString& Nickname) { m_ConvertNickname = Nickname; } 
 };
