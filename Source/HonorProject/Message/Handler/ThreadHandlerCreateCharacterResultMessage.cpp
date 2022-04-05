@@ -8,7 +8,7 @@ void ThreadHandlerCreateCharacterResultMessage::Start()
 {
 	if (EGameServerCode::OK == m_Message->m_Code)
 	{
-		m_GameInstance->m_Characters.push_back(m_Message->m_CharacterInfo);
+		m_GameInstance->m_CharactersInfo.push_back(m_Message->m_CharacterInfo);
 
 		UCharacterListObject* NewCharacterObject = NewObject<UCharacterListObject>();
 		NewCharacterObject->SetCharacterInfo(m_Message->m_CharacterInfo);

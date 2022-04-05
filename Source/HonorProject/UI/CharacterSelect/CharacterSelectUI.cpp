@@ -21,13 +21,13 @@ void UCharacterSelectUI::NativeConstruct()
 	}
 
 	GameInstance->m_CharacterListView = m_CharacterListView;
-	for (size_t i = 0; i < GameInstance->m_Characters.size(); ++i)
+	for (size_t i = 0; i < GameInstance->m_CharactersInfo.size(); ++i)
 	{
 		UCharacterListObject* NewCharacter = NewObject<UCharacterListObject>();
-		NewCharacter->SetCharacterInfo(GameInstance->m_Characters[i]);
+		NewCharacter->SetCharacterInfo(GameInstance->m_CharactersInfo[i]);
 
 		FString Nickname;
-		UClientBlueprintFunctionLibrary::UTF8ToFString(GameInstance->m_Characters[i].m_Nickname, Nickname);
+		UClientBlueprintFunctionLibrary::UTF8ToFString(GameInstance->m_CharactersInfo[i].m_Nickname, Nickname);
 		NewCharacter->SetNickname(Nickname);
 
 		m_CharacterListView->AddItem(NewCharacter);

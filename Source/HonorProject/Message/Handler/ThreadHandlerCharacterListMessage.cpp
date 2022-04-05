@@ -3,11 +3,11 @@
 
 void ThreadHandlerCharacterListMessage::Start()
 {
-	m_GameInstance->m_Characters = m_Message->m_Characters;
-	for (size_t i = 0; i < m_GameInstance->m_Characters.size(); ++i)
+	m_GameInstance->m_CharactersInfo = m_Message->m_CharactersInfo;
+	for (const FCharacterInfo& CharacterInfo : m_GameInstance->m_CharactersInfo)
 	{
 		FString Nickname;
-		UClientBlueprintFunctionLibrary::UTF8ToFString(m_GameInstance->m_Characters[i].m_Nickname, Nickname);
+		UClientBlueprintFunctionLibrary::UTF8ToFString(CharacterInfo.m_Nickname, Nickname);
 	}
 
 	// 서버의 DB를 통해 유저의 캐릭터들 정보를 얻어오고

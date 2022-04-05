@@ -81,7 +81,7 @@ void ULoginUI::ServerLogin()
 		return;
 	}
 
-	GameInstance->m_Characters.clear();
+	GameInstance->m_CharactersInfo.clear();
 	
 	std::string ID;
 	std::string PW;

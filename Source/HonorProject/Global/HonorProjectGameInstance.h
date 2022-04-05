@@ -92,7 +92,9 @@ public:
 	FString						m_UserID;
 	FString						m_Nickname;
 	TAtomic<bool>				m_LoginProcess;
-	std::vector<FCharacterInfo>	m_Characters;
+	std::vector<FCharacterInfo>	m_CharactersInfo;
+	FCharacterInfo				m_SelectCharacterInfo;
+	
 	
 	UPROPERTY()
 	UListView*					m_CharacterListView;
