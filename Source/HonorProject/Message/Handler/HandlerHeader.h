@@ -1,6 +1,7 @@
 #pragma once																															 
 																																		 
 #include "ThreadHandlerChatMessage.h"														
+#include "ThreadHandlerPlayerUpdateMessage.h"														
 #include "ThreadHandlerLoginResultMessage.h"																
 #include "ThreadHandlerJoinResultMessage.h"																
 #include "ThreadHandlerCreateCharacterResultMessage.h"																
@@ -9,6 +10,7 @@
 #include "ThreadHandlerCharacterListMessage.h"																
 #include "ThreadHandlerServerDestroyMessage.h"																
 #include "ThreadHandlerObjectDestroyMessage.h"																
+#include "ThreadHandlerPlayersUpdateMessage.h"																
 #include "ThreadHandlerEnemyUpdateMessage.h"																
 																																		 
 template <typename MessageHandler, typename MessageType>																				 
@@ -33,6 +35,12 @@ inline void AddGlobalHandler(Dispatcher& Dis, UWorld* World)
 	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)
 	               {
 		               OnMessageProcess<ThreadHandlerChatMessage, ChatMessage>(MoveTemp(GameServerMessage), World);
+	               });
+
+	Dis.AddHandler(MessageType::PlayerUpdate,
+	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)
+	               {
+		               OnMessageProcess<ThreadHandlerPlayerUpdateMessage, PlayerUpdateMessage>(MoveTemp(GameServerMessage), World);
 	               });
 																																	
 	Dis.AddHandler(MessageType::LoginResult,																	
@@ -81,6 +89,12 @@ inline void AddGlobalHandler(Dispatcher& Dis, UWorld* World)
 	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
 	               {																												
 		               OnMessageProcess<ThreadHandlerObjectDestroyMessage, ObjectDestroyMessage>(MoveTemp(GameServerMessage), World);															
+	               });																												
+																																	
+	Dis.AddHandler(MessageType::PlayersUpdate,																	
+	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
+	               {																												
+		               OnMessageProcess<ThreadHandlerPlayersUpdateMessage, PlayersUpdateMessage>(MoveTemp(GameServerMessage), World);															
 	               });																												
 																																	
 	Dis.AddHandler(MessageType::EnemyUpdate,																	

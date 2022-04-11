@@ -19,7 +19,7 @@ APlayGameMode::APlayGameMode()
 	}
 }
 
-TSubclassOf<AMasterAICharacter> APlayGameMode::GetEnemyAIClasses(int EnemyType) const
+TSubclassOf<AMasterAICharacter> APlayGameMode::GetEnemyAIClass(int EnemyType) const
 {
 	if (0 > EnemyType)
 	{

@@ -5,6 +5,7 @@
 #include "HonorProject/Global/GameInfo.h"
 #include "GameFramework/GameMode.h"
 #include "HonorProject/Component/ObjectMessageComponent.h"
+#include "HonorProject/Character/PlayerCharacter.h"
 #include "HonorProject/Character/MasterAICharacter.h"
 #include "PlayGameMode.generated.h"
 
@@ -24,6 +25,9 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClientData", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<APlayerCharacter> m_PlayerCharacterClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClientData", meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<AMasterAICharacter>> m_AICharacterClasses;
 
 	TMap<int, ServerObject>					m_AllObject;
@@ -32,7 +36,8 @@ private:
 	int m_ClientUniqueID;
 
 public:
-	TSubclassOf<AMasterAICharacter> GetEnemyAIClasses(int EnemyType) const;
+	TSubclassOf<APlayerCharacter> GetPlayerClass() const { return m_PlayerCharacterClass; }
+	TSubclassOf<AMasterAICharacter> GetEnemyAIClass(int EnemyType) const;
 	AActor* GetGameObject(int ObjectID);
 	int GetClientUniqueID() { return m_ClientUniqueID++; }
 

@@ -21,7 +21,7 @@ void ThreadHandlerEnemyUpdateMessage::Start()
 		return;
 	}
 
-	TSubclassOf<AMasterAICharacter> AICharacter = PlayGameMode->GetEnemyAIClasses(m_Message->m_EnemyType);
+	TSubclassOf<AMasterAICharacter> AICharacter = PlayGameMode->GetEnemyAIClass(m_Message->m_EnemyType);
 	if (nullptr == AICharacter || false == AICharacter->IsValidLowLevel())
 	{
 		LOGSTRING(TEXT("AICharacter Is Not Valid"));

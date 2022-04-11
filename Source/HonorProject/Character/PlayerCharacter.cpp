@@ -93,11 +93,20 @@ void APlayerCharacter::BeginPlay()
 			m_CharacterInfo.MoveSpeed = CharacterInfo->MoveSpeed;
 		}
 
-		if (true == GameInstance->GetClientMode())
+		SetObjectType(EGameObjectType::Player);
+		SetObjectID(PlayGameMode->GetUniqueID());
+		PlayGameMode->RegistObject(GameInstance->m_ActorIndex, EGameObjectType::Player, this);
+
+		ClientToReadyMessage ReadyMessage;
+		GameServerSerializer Serializer;
+		ReadyMessage.m_ActorIndex = GameInstance->m_ActorIndex;
+		ReadyMessage.m_ThreadIndex = GameInstance->m_ThreadIndex;
+		ReadyMessage.m_SectionIndex = GameInstance->m_SectionIndex;
+
+		ReadyMessage.Serialize(Serializer);
+		if (true == GameInstance->Send(Serializer.GetData()))
 		{
-			SetObjectType(EGameObjectType::Player);
-			SetObjectID(PlayGameMode->GetUniqueID());
-			PlayGameMode->RegistObject(0, EGameObjectType::Player, this);
+			GameInstance->m_LoginProcess = true;
 		}
 	}
 }

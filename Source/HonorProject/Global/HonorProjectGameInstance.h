@@ -94,6 +94,9 @@ public:
 	TAtomic<bool>				m_LoginProcess;
 	std::vector<FCharacterInfo>	m_CharactersInfo;
 	FCharacterInfo				m_SelectCharacterInfo;
+	uint64_t 					m_ActorIndex;
+	uint64_t 					m_ThreadIndex;
+	uint64_t 					m_SectionIndex;
 	
 	
 	UPROPERTY()

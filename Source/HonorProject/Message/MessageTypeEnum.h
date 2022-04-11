@@ -3,6 +3,7 @@
 enum class MessageType
 {
 	Chat,
+	PlayerUpdate,
 	LoginResult,
 	JoinResult,
 	CreateCharacterResult,
@@ -11,10 +12,12 @@ enum class MessageType
 	CharacterList,
 	ServerDestroy,
 	ObjectDestroy,
+	PlayersUpdate,
 	EnemyUpdate,
 	Login,
 	Join,
 	CreateCharacter,
 	SelectCharacter,
+	ClientToReady,
 	MAX
 };
