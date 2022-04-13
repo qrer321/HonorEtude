@@ -28,6 +28,9 @@ void AOtherPlayerCharacter::Tick(float DeltaSeconds)
 				continue;
 			}
 
+			const FVector4 Data_Rotation = UpdateMessage->m_Datum.m_Rot;
+			const FQuat Quaternion = FQuat(Data_Rotation.X, Data_Rotation.Y, Data_Rotation.Z, Data_Rotation.W);
+			SetActorRotation(Quaternion);
 			SetActorLocation(UpdateMessage->m_Datum.m_Pos);
 		}
 		else if (MessageType::ObjectDestroy == ServerMessage->GetType<MessageType>())

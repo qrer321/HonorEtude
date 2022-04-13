@@ -9,6 +9,7 @@
 #include "ThreadHandlerInsertSectionResultMessage.h"																
 #include "ThreadHandlerCharacterListMessage.h"																
 #include "ThreadHandlerServerDestroyMessage.h"																
+#include "ThreadHandlerPlayerDestroyMessage.h"																
 #include "ThreadHandlerObjectDestroyMessage.h"																
 #include "ThreadHandlerPlayersUpdateMessage.h"																
 #include "ThreadHandlerEnemyUpdateMessage.h"																
@@ -83,6 +84,12 @@ inline void AddGlobalHandler(Dispatcher& Dis, UWorld* World)
 	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
 	               {																												
 		               OnMessageProcess<ThreadHandlerServerDestroyMessage, ServerDestroyMessage>(MoveTemp(GameServerMessage), World);															
+	               });																												
+																																	
+	Dis.AddHandler(MessageType::PlayerDestroy,																	
+	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
+	               {																												
+		               OnMessageProcess<ThreadHandlerPlayerDestroyMessage, PlayerDestroyMessage>(MoveTemp(GameServerMessage), World);															
 	               });																												
 																																	
 	Dis.AddHandler(MessageType::ObjectDestroy,																	

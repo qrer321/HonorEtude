@@ -329,7 +329,7 @@ void AHonorProjectCharacter::Destroyed()
 		return;
 	}
 
-	PlayGameMode->UnregistObject(m_ObjectID, GetObjectType(), this);
+	PlayGameMode->UnregistObject(m_ActorIndex, GetObjectType(), this);
 }
 
 float AHonorProjectCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,

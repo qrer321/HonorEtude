@@ -119,7 +119,7 @@ public:
 	
 	////////////////////////////// FOR SERVER //////////////////////////////
 private:
-	int				m_ObjectID;
+	int				m_ActorIndex;
 	EGameObjectType m_ObjectType;
 	
 protected:
@@ -129,10 +129,10 @@ protected:
 public:
 	FORCEINLINE UObjectMessageComponent* GetObjectMessage() const { return m_MessageComponent; }
 	FORCEINLINE EGameObjectType GetObjectType() const { return m_ObjectType; }
-	FORCEINLINE int GetObjectID() const { return m_ObjectID; }
+	FORCEINLINE int GetActorIndex() const { return m_ActorIndex; }
 
 	FORCEINLINE void SetObjectType(EGameObjectType ObjectType) { m_ObjectType = ObjectType; }
-	FORCEINLINE void SetObjectID(int ObjectID) { m_ObjectID = ObjectID; }
+	FORCEINLINE void SetActorIndex(int ObjectID) { m_ActorIndex = ObjectID; }
 
 protected:
 	virtual void Destroyed() override;

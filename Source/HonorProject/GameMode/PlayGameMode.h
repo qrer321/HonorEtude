@@ -30,7 +30,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClientData", meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<AMasterAICharacter>> m_AICharacterClasses;
 
-	TMap<int, ServerObject>					m_AllObject;
+	TMap<uint64_t, ServerObject>			m_AllObject;
 	TMap<EGameObjectType, TArray<AActor*>>	m_TypeOfAllObject;
 
 	int m_ClientUniqueID;

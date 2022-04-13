@@ -72,13 +72,13 @@ void AMasterAICharacter::BeginPlay()
 	if (true == GameInstance->GetClientMode())
 	{
 		SetObjectType(EGameObjectType::Enemy);
-		if (0 == GetObjectID())
+		if (0 == GetActorIndex())
 		{
-			SetObjectID(GameInstance->GetUniqueID());
+			SetActorIndex(GameInstance->GetUniqueID());
 		}
 		
 		std::shared_ptr<EnemyUpdateMessage> Message = std::make_shared<EnemyUpdateMessage>();
-		Message->m_ObjectID = GetObjectID();
+		Message->m_ActorIndex = GetActorIndex();
 		Message->m_Pos = GetActorLocation();
 		Message->m_UpdateType = EEnemyState::State_Idle;
 

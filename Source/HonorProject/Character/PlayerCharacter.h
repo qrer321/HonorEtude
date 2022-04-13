@@ -103,4 +103,8 @@ public:
 public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return m_CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return m_FollowCamera; }
+
+
+private:
+	FVector4 m_TempVector;
 };

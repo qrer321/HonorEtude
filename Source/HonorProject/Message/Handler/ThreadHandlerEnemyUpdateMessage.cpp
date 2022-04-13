@@ -29,19 +29,19 @@ void ThreadHandlerEnemyUpdateMessage::Start()
 	}
 
 	// 해당 캐릭터가 존재하지 않는다면
-	if (false == PlayGameMode->IsRegistered(m_Message->m_ObjectID))
+	if (false == PlayGameMode->IsRegistered(m_Message->m_ActorIndex))
 	{
 		FTransform CharacterTransform = FTransform(m_Message->m_Pos);
 
 		AMasterAICharacter* NewEnemyCharacter = m_World->SpawnActorDeferred<AMasterAICharacter>(AICharacter.Get(), CharacterTransform);
 		NewEnemyCharacter->SetObjectType(EGameObjectType::Enemy);
-		NewEnemyCharacter->SetObjectID(m_Message->m_ObjectID);
+		NewEnemyCharacter->SetActorIndex(m_Message->m_ActorIndex);
 		NewEnemyCharacter->FinishSpawning(CharacterTransform);
 
-		PlayGameMode->RegistObject(m_Message->m_ObjectID, EGameObjectType::Enemy, NewEnemyCharacter);
-		PlayGameMode->PushObjectMessage(m_Message->m_ObjectID, m_Message);
+		PlayGameMode->RegistObject(m_Message->m_ActorIndex, EGameObjectType::Enemy, NewEnemyCharacter);
+		PlayGameMode->PushObjectMessage(m_Message->m_ActorIndex, m_Message);
 		return;
 	}
 
-	PlayGameMode->PushObjectMessage(m_Message->m_ObjectID, m_Message);
+	PlayGameMode->PushObjectMessage(m_Message->m_ActorIndex, m_Message);
 }

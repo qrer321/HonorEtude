@@ -29,7 +29,7 @@ void ThreadHandlerPlayersUpdateMessage::Start()
 
 			APlayerCharacter* NewPlayerCharacter = m_World->SpawnActorDeferred<APlayerCharacter>(Character.Get(), CharacterTransform);
 			NewPlayerCharacter->SetObjectType(EGameObjectType::Player);
-			NewPlayerCharacter->SetObjectID(UpdateMessage->m_Datum.m_ActorIndex);
+			NewPlayerCharacter->SetActorIndex(UpdateMessage->m_Datum.m_ActorIndex);
 			NewPlayerCharacter->FinishSpawning(CharacterTransform);
 
 			PlayGameMode->RegistObject(UpdateMessage->m_Datum.m_ActorIndex, EGameObjectType::Player, NewPlayerCharacter);

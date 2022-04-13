@@ -76,38 +76,40 @@ void APlayerCharacter::BeginPlay()
 	}
 	
 	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
-	if (IsValid(GameInstance))
+	if (false == IsValid(GameInstance))
 	{
-		const FCharacterTableInfo* CharacterInfo = GameInstance->FindCharacterInfo(TEXT("Player"));
-		if (CharacterInfo)
-		{
-			m_CharacterInfo.Name = CharacterInfo->Name;
-			m_CharacterInfo.Attack = CharacterInfo->Attack;
-			m_CharacterInfo.Armor = CharacterInfo->Armor;
-			m_CharacterInfo.HP = CharacterInfo->HP;
-			m_CharacterInfo.HPMax = CharacterInfo->HPMax;
-			m_CharacterInfo.SP = CharacterInfo->SP;
-			m_CharacterInfo.SPMax = CharacterInfo->SPMax;
-			m_CharacterInfo.SPRecoverMaxTime = CharacterInfo->SPRecoverMaxTime;
-			m_CharacterInfo.AttackSpeed = CharacterInfo->AttackSpeed;
-			m_CharacterInfo.MoveSpeed = CharacterInfo->MoveSpeed;
-		}
+		return;
+	}
+	
+	const FCharacterTableInfo* CharacterInfo = GameInstance->FindCharacterInfo(TEXT("Player"));
+	if (CharacterInfo)
+	{
+		m_CharacterInfo.Name = CharacterInfo->Name;
+		m_CharacterInfo.Attack = CharacterInfo->Attack;
+		m_CharacterInfo.Armor = CharacterInfo->Armor;
+		m_CharacterInfo.HP = CharacterInfo->HP;
+		m_CharacterInfo.HPMax = CharacterInfo->HPMax;
+		m_CharacterInfo.SP = CharacterInfo->SP;
+		m_CharacterInfo.SPMax = CharacterInfo->SPMax;
+		m_CharacterInfo.SPRecoverMaxTime = CharacterInfo->SPRecoverMaxTime;
+		m_CharacterInfo.AttackSpeed = CharacterInfo->AttackSpeed;
+		m_CharacterInfo.MoveSpeed = CharacterInfo->MoveSpeed;
+	}
 
-		SetObjectType(EGameObjectType::Player);
-		SetObjectID(PlayGameMode->GetUniqueID());
-		PlayGameMode->RegistObject(GameInstance->m_ActorIndex, EGameObjectType::Player, this);
+	SetObjectType(EGameObjectType::Player);
+	SetActorIndex(PlayGameMode->GetUniqueID());
+	PlayGameMode->RegistObject(GameInstance->m_ActorIndex, EGameObjectType::Player, this);
 
-		ClientToReadyMessage ReadyMessage;
-		GameServerSerializer Serializer;
-		ReadyMessage.m_ActorIndex = GameInstance->m_ActorIndex;
-		ReadyMessage.m_ThreadIndex = GameInstance->m_ThreadIndex;
-		ReadyMessage.m_SectionIndex = GameInstance->m_SectionIndex;
+	ClientToReadyMessage ReadyMessage;
+	GameServerSerializer Serializer;
+	ReadyMessage.m_ActorIndex = GameInstance->m_ActorIndex;
+	ReadyMessage.m_ThreadIndex = GameInstance->m_ThreadIndex;
+	ReadyMessage.m_SectionIndex = GameInstance->m_SectionIndex;
 
-		ReadyMessage.Serialize(Serializer);
-		if (true == GameInstance->Send(Serializer.GetData()))
-		{
-			GameInstance->m_LoginProcess = true;
-		}
+	ReadyMessage.Serialize(Serializer);
+	if (true == GameInstance->Send(Serializer.GetData()))
+	{
+		GameInstance->m_LoginProcess = true;
 	}
 }
 
@@ -117,6 +119,34 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 
 	RotateToTarget();
 	CombatCameraSwitch();
+
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+	if (false == IsValid(GameInstance))
+	{
+		return;
+	}
+
+	if (GetActorLocation() == m_TempVector)
+	{
+		return;
+	}
+
+	PlayerUpdateMessage UpdateMessage;
+	GameServerSerializer Serializer;
+	
+	UpdateMessage.m_Datum.m_ThreadIndex = GameInstance->m_ThreadIndex;
+	UpdateMessage.m_Datum.m_SectionIndex = GameInstance->m_SectionIndex;
+	UpdateMessage.m_Datum.m_ActorIndex = GameInstance->m_ActorIndex;
+	
+	UpdateMessage.m_Datum.m_Pos = GetActorLocation();
+	UpdateMessage.m_Datum.m_Dir = GetActorForwardVector();
+	const FQuat Quaternion = GetActorRotation().Quaternion();
+	UpdateMessage.m_Datum.m_Rot = FVector4(Quaternion.X, Quaternion.Y, Quaternion.Z, Quaternion.W);
+
+	UpdateMessage.Serialize(Serializer);
+	GameInstance->Send(Serializer.GetData());
+
+	m_TempVector = GetActorLocation();
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -537,7 +567,7 @@ void APlayerCharacter::TestPacketUpdate0()
 #include "HonorProject/Message/ServerToClient.h"
 
 	std::shared_ptr<EnemyUpdateMessage> Message = std::make_shared<EnemyUpdateMessage>();
-	Message->m_ObjectID = 100;
+	Message->m_ActorIndex = 100;
 	Message->m_Pos = FVector(500.0f, 500.0f, 200.0f);
 	Message->m_EnemyType = 0;
 	GameInstance->PushClientMessage(Message);
@@ -559,7 +589,7 @@ void APlayerCharacter::TestPacketUpdate1()
 #include "HonorProject/Message/ServerToClient.h"
 
 	std::shared_ptr<EnemyUpdateMessage> Message = std::make_shared<EnemyUpdateMessage>();
-	Message->m_ObjectID = 100;
+	Message->m_ActorIndex = 100;
 	Message->m_Pos = FVector(300.0f, 300.0f, 200.0f);
 	Message->m_EnemyType = 0;
 	//Message->m_UpdateType = EEnemyState::State_Idle;
@@ -582,6 +612,6 @@ void APlayerCharacter::TestPacketUpdate2()
 #include "HonorProject/Message/ServerToClient.h"
 
 	std::shared_ptr<ObjectDestroyMessage> Message = std::make_shared<ObjectDestroyMessage>();
-	Message->m_ObjectID = 100;
+	Message->m_ActorIndex = 100;
 	GameInstance->PushClientMessage(Message);
 }

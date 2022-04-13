@@ -20,5 +20,5 @@ void ThreadHandlerObjectDestroyMessage::Start()
 		return;
 	}
 
-	PlayGameMode->PushObjectMessage(m_Message->m_ObjectID, m_Message);
+	PlayGameMode->PushObjectMessage(m_Message->m_ActorIndex, m_Message);
 }

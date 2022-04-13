@@ -207,6 +207,8 @@ void UHonorProjectGameInstance::CloseConnect()
 
 	m_ClientSocket->Close();
 	m_ClientSocket = nullptr;
+
+	m_LoginProcess = false;
 }
 
 bool UHonorProjectGameInstance::Send(const std::vector<uint8>& Data)

@@ -1,6 +1,6 @@
-﻿#include "ThreadHandlerServerDestroyMessage.h"
+﻿#include "ThreadHandlerPlayerDestroyMessage.h"
 
-void ThreadHandlerServerDestroyMessage::Start()
+void ThreadHandlerPlayerDestroyMessage::Start()
 {
 	m_GameInstance->CloseConnect();
 
