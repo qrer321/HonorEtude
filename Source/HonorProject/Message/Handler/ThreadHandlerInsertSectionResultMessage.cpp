@@ -13,6 +13,8 @@ void ThreadHandlerInsertSectionResultMessage::Start()
 	m_GameInstance->m_ActorIndex = m_Message->m_ActorIndex;
 	m_GameInstance->m_ThreadIndex = m_Message->m_ThreadIndex;
 	m_GameInstance->m_SectionIndex = m_Message->m_SectionIndex;
+
+	m_GameInstance->ServerConnect_UDP("35000");
 	
 	UGameplayStatics::OpenLevel(m_World, TEXT("PlayTestLevel"));
 }

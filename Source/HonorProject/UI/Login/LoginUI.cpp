@@ -31,7 +31,7 @@ void ULoginUI::ServerConnect()
 {
 	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
 	
-	if (false == GameInstance->ServerConnect(m_IPString, m_PortString))
+	if (false == GameInstance->ServerConnect_TCP(m_IPString, m_PortString))
 	{
 		m_ConnectStatus = TEXT("Connect Failed");
 		return;

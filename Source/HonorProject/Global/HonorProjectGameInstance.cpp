@@ -3,33 +3,38 @@
 
 #include "HonorProjectGameInstance.h"
 #include "Sockets.h"
-#include "SocketSubsystem.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
-#include "Interfaces/IPv4/IPv4Address.h"
-#include "Interfaces/IPv4/IPv4Endpoint.h"
 #include "../Message/MessageConverter.h"
 #include "../Message/Handler/ThreadHandlerServerDestroyMessage.h"
 
-ClientRecvThread::ClientRecvThread(FSocket* RecvSocket, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue)
+
+////////////////////////////////////// TCP Receive Thread //////////////////////////////////////
+ClientRecvThread_TCP::ClientRecvThread_TCP(FSocket* RecvSocket, ISocketSubsystem* SocketSubsystem, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue)
 {
 	if (nullptr == RecvSocket)
 	{
-		UE_LOG(LogTemp, Error, TEXT("RecvSocket Error"));
+		UE_LOG(LogTemp, Error, TEXT("RecvSocket Is Nullptr"));
+	}
+
+	if (nullptr == SocketSubsystem)
+	{
+		UE_LOG(LogTemp, Error, TEXT("SocketSubsystem Is Nullptr"));
 	}
 
 	if (nullptr == MessageQueue)
 	{
-		UE_LOG(LogTemp, Error, TEXT("MessageQueue Error"));
+		UE_LOG(LogTemp, Error, TEXT("MessageQueue Is Nullptr"));
 	}
 
 	m_RecvSocket = RecvSocket;
+	m_SocketSubsystem = SocketSubsystem;
 	m_MessageQueue = MessageQueue;
 	m_IsThreadRunnable = true;
 }
 
-uint32 ClientRecvThread::Run()
+uint32 ClientRecvThread_TCP::Run()
 {
-	UE_LOG(LogTemp, Log, TEXT("Recv Start"));
+	UE_LOG(LogTemp, Log, TEXT("Receive Thread Start"));
 
 	while (m_IsThreadRunnable)
 	{
@@ -77,17 +82,84 @@ uint32 ClientRecvThread::Run()
 	return 0;
 }
 
-void ClientRecvThread::Stop()
+void ClientRecvThread_TCP::Stop()
 {
 	FRunnable::Stop();
 }
 
-void ClientRecvThread::Exit()
+void ClientRecvThread_TCP::Exit()
 {
 	FRunnable::Exit();
 }
 
-void ClientRecvThread::Close()
+void ClientRecvThread_TCP::Close()
+{
+	m_IsThreadRunnable = false;
+}
+
+////////////////////////////////////// UDP Receive Thread //////////////////////////////////////
+ClientRecvThread_UDP::ClientRecvThread_UDP(FSocket* RecvSocket, ISocketSubsystem* SocketSubsystem, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue)
+{
+	if (nullptr == RecvSocket)
+	{
+		UE_LOG(LogTemp, Error, TEXT("RecvSocket Is Nullptr"));
+	}
+
+	if (nullptr == SocketSubsystem)
+	{
+		UE_LOG(LogTemp, Error, TEXT("SocketSubsystem Is Nullptr"));
+	}
+
+	if (nullptr == MessageQueue)
+	{
+		UE_LOG(LogTemp, Error, TEXT("MessageQueue Is Nullptr"));
+	}
+
+	m_RecvSocket = RecvSocket;
+	m_SocketSubsystem = SocketSubsystem;
+	m_MessageQueue = MessageQueue;
+	m_IsThreadRunnable = true;
+}
+
+uint32 ClientRecvThread_UDP::Run()
+{
+	UE_LOG(LogTemp, Log, TEXT("Receive Thread Start"));
+	
+	const FIPv4Endpoint Endpoint = FIPv4Endpoint();
+	TSharedRef<FInternetAddr> InternetAddr = Endpoint.ToInternetAddr(); 
+
+	while (m_IsThreadRunnable)
+	{
+		std::vector<uint8> RecvData;
+		RecvData.resize(1024);
+		int32 RecvDataSize = 0;
+		
+		if (false == m_RecvSocket->RecvFrom(&RecvData[0], RecvData.size(), RecvDataSize, InternetAddr.Get()))
+		{
+			const FString SocketError = m_SocketSubsystem->GetSocketError(m_SocketSubsystem->GetLastErrorCode());
+			UE_LOG(LogTemp, Error, TEXT("%s"), *SocketError);
+			
+			break;
+		}
+
+		MessageConverter Converter = MessageConverter(RecvData);
+		m_MessageQueue->Enqueue(MoveTemp(Converter.GetServerMessage()));
+	}
+	
+	return 0;
+}
+
+void ClientRecvThread_UDP::Stop()
+{
+	FRunnable::Stop();
+}
+
+void ClientRecvThread_UDP::Exit()
+{
+	FRunnable::Exit();
+}
+
+void ClientRecvThread_UDP::Close()
 {
 	m_IsThreadRunnable = false;
 }
@@ -147,7 +219,7 @@ bool UHonorProjectGameInstance::ClientThreadCheck()
 	return true;
 }
 
-bool UHonorProjectGameInstance::ServerConnect(const FString& IPString, const FString& PortString)
+bool UHonorProjectGameInstance::ServerConnect_TCP(const FString& IPString, const FString& PortString)
 {
 	if (false == ClientThreadCheck())
 	{
@@ -164,51 +236,57 @@ bool UHonorProjectGameInstance::ServerConnect(const FString& IPString, const FSt
 		return false;
 	}
 
-	m_ClientSocket = m_SocketSubsystem->CreateSocket(NAME_Stream, "ClientSocket");
-	if (nullptr == m_ClientSocket)
+	m_TCPClientSocket = m_SocketSubsystem->CreateSocket(NAME_Stream, "ClientSocket_TCP");
+	if (nullptr == m_TCPClientSocket)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Create Client Socket Is Failed"));
+		UE_LOG(LogTemp, Error, TEXT("Create TCP Client Socket Is Failed"));
 		return false;
 	}
 
-	m_ClientSocket->SetNoDelay(true);
+	m_TCPClientSocket->SetNoDelay(true);
 
-	FIPv4Address ConnectAddress;
-	FIPv4Address::Parse(IPString, ConnectAddress);
-	FIPv4Endpoint EndPoint = FIPv4Endpoint(ConnectAddress, static_cast<uint16>(FCString::Atoi(*PortString)));
+	FIPv4Address::Parse(IPString, m_ConnectAddress);
+	m_TCPPort = static_cast<uint16>(FCString::Atoi(*PortString));
+	m_TCPEndPoint = FIPv4Endpoint(m_ConnectAddress, m_TCPPort);
 
-	if (false == m_ClientSocket->Connect(EndPoint.ToInternetAddr().Get()))
+	if (false == m_TCPClientSocket->Connect(m_TCPEndPoint.ToInternetAddr().Get()))
 	{
 		const FString SocketError = m_SocketSubsystem->GetSocketError(m_SocketSubsystem->GetLastErrorCode());
 		UE_LOG(LogTemp, Error, TEXT("%s"), *SocketError);
 
-		m_ClientSocket->Close();
-		m_ClientSocket = nullptr;
+		m_TCPClientSocket->Close();
+		m_TCPClientSocket = nullptr;
 		return false;
 	}
 
-	m_RecvThread = new ClientRecvThread(m_ClientSocket, &m_MessageQueue);
-	m_RunnableThread = FRunnableThread::Create(m_RecvThread, TEXT("Recv Thread"));
+	m_TCPRecvThread = new ClientRecvThread_TCP(m_TCPClientSocket, m_SocketSubsystem, &m_MessageQueue);
+	m_TCPRunnableThread = FRunnableThread::Create(m_TCPRecvThread, TEXT("TCP Recv Thread"));
 	
 	return true;
 }
 
-void UHonorProjectGameInstance::CloseConnect()
+bool UHonorProjectGameInstance::ServerConnect_UDP(const FString& PortString)
 {
-	if (nullptr != m_RecvThread)
+	if (nullptr == m_SocketSubsystem)
 	{
-		m_RecvThread->Close();
+		return false;
+	}
+
+	m_UDPClientSocket = m_SocketSubsystem->CreateSocket(NAME_DGram, "ClientSocket_UDP");
+	if (nullptr == m_UDPClientSocket)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Create UDP Client Socket Is Failed"));
+		return false;
 	}
 	
-	if (nullptr == m_ClientSocket)
-	{
-		return;
-	}
+	m_UDPPort = static_cast<uint16>(FCString::Atoi(*PortString));
+	m_UDPEndPoint = FIPv4Endpoint(m_ConnectAddress, m_UDPPort);
 
-	m_ClientSocket->Close();
-	m_ClientSocket = nullptr;
+	m_UDPClientSocket->Bind(m_UDPEndPoint.ToInternetAddr().Get());
+	m_UDPRecvThread = new ClientRecvThread_UDP(m_UDPClientSocket, m_SocketSubsystem, &m_MessageQueue);
+	m_UDPRunnableThread = FRunnableThread::Create(m_UDPRecvThread, TEXT("UDP Recv Thread"));
 
-	m_LoginProcess = false;
+	return true;
 }
 
 bool UHonorProjectGameInstance::Send(const std::vector<uint8>& Data)
@@ -218,11 +296,52 @@ bool UHonorProjectGameInstance::Send(const std::vector<uint8>& Data)
 		return false;
 	}
 
-	if (nullptr == m_ClientSocket)
+	if (nullptr == m_TCPClientSocket)
 	{
 		return false;
 	}
 
 	int32 DataSendSize = 0;
-	return m_ClientSocket->Send(&Data[0], Data.size(), DataSendSize);
+	return m_TCPClientSocket->Send(&Data[0], Data.size(), DataSendSize);
+}
+
+bool UHonorProjectGameInstance::SendTo(const std::vector<uint8>& Data)
+{
+	if (0 == Data.size())
+	{
+		return false;
+	}
+
+	if (nullptr == m_TCPClientSocket)
+	{
+		return false;
+	}
+
+	int32 DataSendSize = 0;
+	return m_UDPClientSocket->SendTo(&Data[0], Data.size(), DataSendSize, m_UDPEndPoint.ToInternetAddr().Get());
+}
+
+void UHonorProjectGameInstance::CloseConnect()
+{
+	if (nullptr != m_TCPRecvThread)
+	{
+		m_TCPRecvThread->Close();
+	}
+	
+	if (nullptr == m_TCPClientSocket)
+	{
+		return;
+	}
+
+	m_LoginProcess = false;
+	
+	m_TCPClientSocket->Close();
+	m_TCPClientSocket = nullptr;
+
+	if (nullptr == m_UDPClientSocket)
+	{
+		return;
+	}
+	m_UDPClientSocket->Close();
+	m_UDPClientSocket = nullptr;
 }

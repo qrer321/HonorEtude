@@ -51,6 +51,8 @@ APlayerCharacter::APlayerCharacter()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SMSwordAsset(TEXT("StaticMesh'/Game/GKnight/Meshes/Weapon/SM_WP_GothicKnight_Sword.SM_WP_GothicKnight_Sword'"));
 	if (SMSwordAsset.Succeeded())
 		m_SMSword->SetStaticMesh(SMSwordAsset.Object);
+
+	m_UDPReady = false;
 }
 
 void APlayerCharacter::BeginPlay()
@@ -113,20 +115,10 @@ void APlayerCharacter::BeginPlay()
 	}
 }
 
-void APlayerCharacter::Tick(float DeltaSeconds)
+void APlayerCharacter::SendPlayerUpdatePacket()
 {
-	Super::Tick(DeltaSeconds);
-
-	RotateToTarget();
-	CombatCameraSwitch();
-
 	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
 	if (false == IsValid(GameInstance))
-	{
-		return;
-	}
-
-	if (GetActorLocation() == m_TempVector)
 	{
 		return;
 	}
@@ -144,8 +136,48 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	UpdateMessage.m_Datum.m_Rot = FVector4(Quaternion.X, Quaternion.Y, Quaternion.Z, Quaternion.W);
 
 	UpdateMessage.Serialize(Serializer);
-	GameInstance->Send(Serializer.GetData());
+	GameInstance->SendTo(Serializer.GetData());
+}
 
+void APlayerCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	RotateToTarget();
+	CombatCameraSwitch();
+
+	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
+	if (false == IsValid(GameInstance))
+	{
+		return;
+	}
+
+	while (false == GetObjectMessage()->IsEmpty())
+	{
+		std::shared_ptr<GameServerMessage> Message = GetObjectMessage()->Dequeue();
+		if (MessageType::UDPReadyOK == Message->GetType<MessageType>())
+		{
+			m_UDPReady = true;
+		}
+		else if (MessageType::ObjectDestroy == Message->GetType<MessageType>())
+		{
+			Destroy();
+		}
+	}
+
+	if (false == m_UDPReady)
+	{
+		SendPlayerUpdatePacket();
+		return;
+	}
+
+	if (GetActorLocation() == m_TempVector)
+	{
+		SendPlayerUpdatePacket();
+		return;
+	}
+	
+	SendPlayerUpdatePacket();
 	m_TempVector = GetActorLocation();
 }
 

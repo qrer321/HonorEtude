@@ -5,10 +5,13 @@
 #include <memory>
 
 #include "GameInfo.h"
+#include "SocketSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "HonorProject/Message/Messages.h"
 #include "HonorProject/Message/ContentsStructure.h"
 #include "HonorProject/UI/Play/ChatWindow.h"
+#include "Interfaces/IPv4/IPv4Address.h"
+#include "Interfaces/IPv4/IPv4Endpoint.h"
 #include "HonorProjectGameInstance.generated.h"
 
 USTRUCT(BlueprintType)
@@ -49,14 +52,34 @@ public:
 	float MoveSpeed;
 };
 
-class ClientRecvThread : public FRunnable
+class ClientRecvThread_TCP : public FRunnable
 {
 public:
-	ClientRecvThread(FSocket* RecvSocket, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue);
+	ClientRecvThread_TCP(FSocket* RecvSocket, ISocketSubsystem* SocketSubsystem, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue);
 
 private:
-	TAtomic<bool> m_IsThreadRunnable;
-	FSocket* m_RecvSocket;
+	FSocket*									m_RecvSocket;
+	ISocketSubsystem*							m_SocketSubsystem;
+	TAtomic<bool>								m_IsThreadRunnable;
+	TQueue<std::shared_ptr<GameServerMessage>>* m_MessageQueue;
+
+public:
+	virtual uint32 Run() override;
+	virtual void Stop() override;
+	virtual void Exit() override;
+
+	void Close();
+};
+
+class ClientRecvThread_UDP : public FRunnable
+{
+public:
+	ClientRecvThread_UDP(FSocket* RecvSocket, ISocketSubsystem* SocketSubsystem, TQueue<std::shared_ptr<GameServerMessage>>* MessageQueue);
+
+private:
+	FSocket*									m_RecvSocket;
+	ISocketSubsystem*							m_SocketSubsystem;
+	TAtomic<bool>								m_IsThreadRunnable;
 	TQueue<std::shared_ptr<GameServerMessage>>* m_MessageQueue;
 
 public:
@@ -75,20 +98,30 @@ class HONORPROJECT_API UHonorProjectGameInstance : public UGameInstance
 public:
 	UHonorProjectGameInstance();
 	virtual ~UHonorProjectGameInstance() override;
-
+	
 private:
-	ClientRecvThread*	m_RecvThread;
-	FRunnableThread*	m_RunnableThread;
+	// Server Member Variable
+	ClientRecvThread_TCP*	m_TCPRecvThread;
+	ClientRecvThread_UDP*	m_UDPRecvThread;
+	FRunnableThread*		m_TCPRunnableThread;
+	FRunnableThread*		m_UDPRunnableThread;
 
-	ISocketSubsystem*	m_SocketSubsystem;
-	FSocket*			m_ClientSocket;
+	ISocketSubsystem*		m_SocketSubsystem;
+	FSocket*				m_TCPClientSocket;
+	FSocket*				m_UDPClientSocket;
+
+	FIPv4Address			m_ConnectAddress;
+	FIPv4Endpoint 			m_TCPEndPoint;
+	FIPv4Endpoint 			m_UDPEndPoint;
+	int 					m_TCPPort;
+	int 					m_UDPPort;
 
 	TQueue<std::shared_ptr<GameServerMessage>> m_MessageQueue;
 
 	bool m_ClientMode;
 
 public:
-	// Temp Member Variable
+	// Server Member Variable
 	FString						m_UserID;
 	FString						m_Nickname;
 	TAtomic<bool>				m_LoginProcess;
@@ -119,10 +152,12 @@ public:
 	bool IsEmptyMessage() const { return m_MessageQueue.IsEmpty(); }
 	
 	bool ClientThreadCheck();
-	bool ServerConnect(const FString& IPString, const FString& PortString);
+	bool ServerConnect_TCP(const FString& IPString, const FString& PortString);
+	bool ServerConnect_UDP(const FString& PortString);
 	void CloseConnect();
 
 	bool Send(const std::vector<uint8>& Data);
+	bool SendTo(const std::vector<uint8>& Data);
 
 	FORCEINLINE bool GetClientMode() const { return m_ClientMode; }
 	FORCEINLINE void SetClientMode(bool Mode) { m_ClientMode = Mode; }
