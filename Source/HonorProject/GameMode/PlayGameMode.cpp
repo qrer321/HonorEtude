@@ -117,6 +117,18 @@ bool APlayGameMode::PushObjectMessage(int ObjectID, std::shared_ptr<GameServerMe
 		return false;
 	}
 
+	if (nullptr == m_AllObject[ObjectID].Actor ||
+		false == m_AllObject[ObjectID].Actor->IsValidLowLevel())
+	{
+		return false;
+	}
+
+	if (nullptr == m_AllObject[ObjectID].Message ||
+		false == m_AllObject[ObjectID].Message->IsValidLowLevel())
+	{
+		return false;
+	}
+
 	m_AllObject[ObjectID].Message->EnQueue(Message);
 	return true;
 }

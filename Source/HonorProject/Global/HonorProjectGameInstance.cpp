@@ -265,11 +265,11 @@ bool UHonorProjectGameInstance::ServerConnect_TCP(const FString& IPString, const
 	return true;
 }
 
-bool UHonorProjectGameInstance::ServerConnect_UDP(const FString& PortString)
+bool UHonorProjectGameInstance::ServerConnect_UDP(const FString& PortString, uint64 ServerSendUDPPort)
 {
 	if (nullptr == m_SocketSubsystem)
 	{
-		return false;
+		return true;
 	}
 
 	m_UDPClientSocket = m_SocketSubsystem->CreateSocket(NAME_DGram, "ClientSocket_UDP");
@@ -279,10 +279,17 @@ bool UHonorProjectGameInstance::ServerConnect_UDP(const FString& PortString)
 		return false;
 	}
 	
-	m_UDPPort = static_cast<uint16>(FCString::Atoi(*PortString));
-	m_UDPEndPoint = FIPv4Endpoint(m_ConnectAddress, m_UDPPort);
+	m_ServerSendUDPPort = ServerSendUDPPort;
+	m_ServerSendUDPEndPoint = FIPv4Endpoint(m_ConnectAddress, m_ServerSendUDPPort);
 
-	m_UDPClientSocket->Bind(m_UDPEndPoint.ToInternetAddr().Get());
+	m_ClientRecvUDPPort = static_cast<uint16>(FCString::Atoi(*PortString));
+	m_ClientRecvUDPEndPoint = FIPv4Endpoint(m_ConnectAddress, m_ClientRecvUDPPort);
+
+	while(false == m_UDPClientSocket->Bind(m_ClientRecvUDPEndPoint.ToInternetAddr().Get()))
+	{
+		m_ClientRecvUDPEndPoint = FIPv4Endpoint(m_ConnectAddress, ++m_ClientRecvUDPPort);
+	}
+	
 	m_UDPRecvThread = new ClientRecvThread_UDP(m_UDPClientSocket, m_SocketSubsystem, &m_MessageQueue);
 	m_UDPRunnableThread = FRunnableThread::Create(m_UDPRecvThread, TEXT("UDP Recv Thread"));
 
@@ -318,7 +325,7 @@ bool UHonorProjectGameInstance::SendTo(const std::vector<uint8>& Data)
 	}
 
 	int32 DataSendSize = 0;
-	return m_UDPClientSocket->SendTo(&Data[0], Data.size(), DataSendSize, m_UDPEndPoint.ToInternetAddr().Get());
+	return m_UDPClientSocket->SendTo(&Data[0], Data.size(), DataSendSize, m_ServerSendUDPEndPoint.ToInternetAddr().Get());
 }
 
 void UHonorProjectGameInstance::CloseConnect()

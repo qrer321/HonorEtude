@@ -37,5 +37,9 @@ void AOtherPlayerCharacter::Tick(float DeltaSeconds)
 		{
 			Destroy();
 		}
+		else if (MessageType::MoveLevel == ServerMessage->GetType<MessageType>())
+		{
+			Destroy();
+		}
 	}
 }

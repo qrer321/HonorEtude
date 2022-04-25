@@ -112,9 +112,11 @@ private:
 
 	FIPv4Address			m_ConnectAddress;
 	FIPv4Endpoint 			m_TCPEndPoint;
-	FIPv4Endpoint 			m_UDPEndPoint;
+	FIPv4Endpoint 			m_ClientRecvUDPEndPoint;
+	FIPv4Endpoint 			m_ServerSendUDPEndPoint;
 	int 					m_TCPPort;
-	int 					m_UDPPort;
+	int 					m_ClientRecvUDPPort;		// 35000...
+	int 					m_ServerSendUDPPort;		// 30001
 
 	TQueue<std::shared_ptr<GameServerMessage>> m_MessageQueue;
 
@@ -153,7 +155,7 @@ public:
 	
 	bool ClientThreadCheck();
 	bool ServerConnect_TCP(const FString& IPString, const FString& PortString);
-	bool ServerConnect_UDP(const FString& PortString);
+	bool ServerConnect_UDP(const FString& PortString, uint64 ServerSendUDPPort);
 	void CloseConnect();
 
 	bool Send(const std::vector<uint8>& Data);
@@ -161,4 +163,7 @@ public:
 
 	FORCEINLINE bool GetClientMode() const { return m_ClientMode; }
 	FORCEINLINE void SetClientMode(bool Mode) { m_ClientMode = Mode; }
+
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE int GetClientIndex() const { return m_ActorIndex; }
 };

@@ -6,6 +6,7 @@
 #include "ThreadHandlerJoinResultMessage.h"																
 #include "ThreadHandlerCreateCharacterResultMessage.h"																
 #include "ThreadHandlerSelectCharacterResultMessage.h"																
+#include "ThreadHandlerMoveLevelMessage.h"																
 #include "ThreadHandlerUDPReadyOKMessage.h"																
 #include "ThreadHandlerInsertSectionResultMessage.h"																
 #include "ThreadHandlerCharacterListMessage.h"																
@@ -67,6 +68,12 @@ inline void AddGlobalHandler(Dispatcher& Dis, UWorld* World)
 	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
 	               {																												
 		               OnMessageProcess<ThreadHandlerSelectCharacterResultMessage, SelectCharacterResultMessage>(MoveTemp(GameServerMessage), World);															
+	               });																												
+																																	
+	Dis.AddHandler(MessageType::MoveLevel,																	
+	               [World](std::shared_ptr<GameServerMessage> GameServerMessage)													
+	               {																												
+		               OnMessageProcess<ThreadHandlerMoveLevelMessage, MoveLevelMessage>(MoveTemp(GameServerMessage), World);															
 	               });																												
 																																	
 	Dis.AddHandler(MessageType::UDPReadyOK,																	

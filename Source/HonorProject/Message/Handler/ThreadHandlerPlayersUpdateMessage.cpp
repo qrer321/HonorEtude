@@ -6,14 +6,14 @@ void ThreadHandlerPlayersUpdateMessage::Start()
 	APlayGameMode* PlayGameMode = Cast<APlayGameMode>(UGameplayStatics::GetGameMode(m_World));
 	if (nullptr == PlayGameMode || false == PlayGameMode->IsValidLowLevel())
 	{
-		LOGSTRING(TEXT("GameMode Is Not Valid"));
+		UE_LOG(LogTemp, Error, TEXT("GameMode Is Not Valid"));
 		return;
 	}
 
 	TSubclassOf<APlayerCharacter> Character = PlayGameMode->GetPlayerClass();
 	if (nullptr == Character || false == Character->IsValidLowLevel())
 	{
-		LOGSTRING(TEXT("Player Character Is Not Valid"));
+		UE_LOG(LogTemp, Error, TEXT("Player Character Is Not Valid"));
 		return;
 	}
 
@@ -27,7 +27,10 @@ void ThreadHandlerPlayersUpdateMessage::Start()
 		{
 			FTransform CharacterTransform = FTransform(UpdateMessage->m_Datum.m_Pos);
 
-			APlayerCharacter* NewPlayerCharacter = m_World->SpawnActorDeferred<APlayerCharacter>(Character.Get(), CharacterTransform);
+			APlayerCharacter* NewPlayerCharacter = m_World->SpawnActorDeferred<APlayerCharacter>(
+				Character.Get(), CharacterTransform,
+				nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+			
 			NewPlayerCharacter->SetObjectType(EGameObjectType::Player);
 			NewPlayerCharacter->SetActorIndex(UpdateMessage->m_Datum.m_ActorIndex);
 			NewPlayerCharacter->FinishSpawning(CharacterTransform);

@@ -18,6 +18,11 @@ void UObjectMessageComponent::BeginPlay()
 
 void UObjectMessageComponent::EnQueue(std::shared_ptr<GameServerMessage> Message)
 {
+	if (nullptr == Message)
+	{
+		return;
+	}
+	
 	m_MessageQueue.Enqueue(Message);
 }
 
