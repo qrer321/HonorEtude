@@ -52,7 +52,11 @@ APlayerCharacter::APlayerCharacter()
 	if (SMSwordAsset.Succeeded())
 		m_SMSword->SetStaticMesh(SMSwordAsset.Object);
 
+
+
+	// For Server Code
 	m_UDPReady = false;
+	m_ServerPostEnable = false;
 }
 
 void APlayerCharacter::BeginPlay()
@@ -139,13 +143,9 @@ void APlayerCharacter::SendPlayerUpdatePacket()
 	GameInstance->SendTo(Serializer.GetData());
 }
 
-void APlayerCharacter::Tick(float DeltaSeconds)
+void APlayerCharacter::ServerTick(float DeltaTime)
 {
-	Super::Tick(DeltaSeconds);
-
-	RotateToTarget();
-	CombatCameraSwitch();
-
+	// For Server Message
 	UHonorProjectGameInstance* GameInstance = Cast<UHonorProjectGameInstance>(GetWorld()->GetGameInstance());
 	if (false == IsValid(GameInstance))
 	{
@@ -155,7 +155,20 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	while (false == GetObjectMessage()->IsEmpty())
 	{
 		std::shared_ptr<GameServerMessage> Message = GetObjectMessage()->Dequeue();
-		if (MessageType::UDPReadyOK == Message->GetType<MessageType>())
+		if(MessageType::MoveLevel == Message->GetType<MessageType>())
+		{
+			m_ServerPostEnable = false;
+			
+			MoveLevelResponseMessage ResponseMessage;
+			GameServerSerializer Serializer;
+			ResponseMessage.m_ActorIndex = GameInstance->m_ActorIndex;
+			ResponseMessage.m_ThreadIndex = GameInstance->m_ThreadIndex;
+			ResponseMessage.m_SectionIndex = GameInstance->m_SectionIndex;
+			ResponseMessage.Serialize(Serializer);
+
+			GameInstance->Send(Serializer.GetData());
+		}
+		else if (MessageType::UDPReadyOK == Message->GetType<MessageType>())
 		{
 			m_UDPReady = true;
 		}
@@ -163,6 +176,19 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 		{
 			Destroy();
 		}
+		else if (MessageType::PlayerUpdate == Message->GetType<MessageType>())
+		{
+			m_ServerPostEnable = true;
+		}
+		else
+		{
+			
+		}
+	}
+
+	if (false == m_ServerPostEnable)
+	{
+		return;
 	}
 
 	if (false == m_UDPReady)
@@ -179,6 +205,16 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	
 	SendPlayerUpdatePacket();
 	m_TempVector = GetActorLocation();
+}
+
+void APlayerCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	RotateToTarget();
+	CombatCameraSwitch();
+
+	ServerTick(DeltaSeconds);
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)

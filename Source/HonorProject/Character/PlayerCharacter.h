@@ -103,10 +103,13 @@ public:
 private:
 	FVector4 m_TempVector;
 	bool m_UDPReady;
+	bool m_ServerPostEnable;
 
 	
 public:
 	void SendPlayerUpdatePacket();
+
+	void ServerTick(float DeltaTime);
 	
 	void TestPacketUpdate0();
 	void TestPacketUpdate1();
